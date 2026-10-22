@@ -273,3 +273,95 @@ def test_reset_soc_keeps_an_open_session():
     tracker.reset_soc()
     assert tracker.current.soc_start == 40
     assert tracker.current.vehicle_id == "twingo"
+
+
+def _de_night(both_written):
+    """Replay the dé's real cadence: 4 h at 2.15 kW (8.6 kWh) from 22:00, unplugged at 02:30.
+
+    The charger publishes power and its session counter once a minute at the same instant;
+    Home Assistant sees the power event first (still with the OLD counter unless both states
+    are already written), then the counter event 0.4 ms later. The hub also ticks every 30 s.
+    """
+    start, end = at(22), at(2, 0, 1)
+
+    def published(t):
+        steps = min(max((t - start) // 60, 0), 240)  # full minutes charged before t
+        return (2150 if start <= t < end else 0), round(steps * 2.15 / 60, 3)
+
+    events = []  # (t, power, counter) as each state-change event sees them
+    old_e = 0.0
+    for t in range(int(at(21, 45)), int(at(2, 45, 1)), 60):
+        p, e = published(t)
+        events.append((t, p, e if both_written else old_e))
+        events.append((t + 0.0004, p, e))
+        old_e = e
+    ticks = [(t, None, None) for t in range(int(at(21, 45)) + 15, int(at(3, 0, 1)), 30)]
+    tracker, done, cur = make_tracker(), [], (0, 0.0)
+    for t, p, e in sorted(events + ticks):
+        if p is not None:
+            cur = (p, e)
+        s = tracker.feed(Sample(t, cur[0], cur[1], t < at(2, 30, 1), 0.1356, True, None), "twingo")
+        if s is not None:
+            done.append(s)
+    return done
+
+
+@pytest.mark.parametrize("both_written", [False, True])
+def test_real_cadence_counter_is_credited(both_written):
+    done = _de_night(both_written)
+    assert len(done) == 1
+    s = done[0]
+    assert s.energy_kwh == pytest.approx(8.6, abs=0.05)
+    assert s.off_peak.kwh == pytest.approx(s.energy_kwh)
+    assert s.cost == pytest.approx(s.energy_kwh * 0.1356)
+    assert s.charging_s == pytest.approx(4 * 3600, abs=60)
+    assert not s.estimated
+
+
+def test_counter_increase_without_known_power_is_kept():
+    def make(t):
+        e = min(max(t - at(1), 0), 7200) / 3600 * 2.0
+        p = None if at(2) <= t < at(2, 30) else 2000 if at(1) <= t < at(3) else 0
+        return Sample(t, p, e, t < at(4), 0.2, False, None)
+
+    done = run(make_tracker(), at(0), at(5), make)
+    assert len(done) == 1
+    assert done[0].energy_kwh == pytest.approx(4.0, abs=0.01)
+
+
+def test_restart_with_entities_unavailable_recovers_counter():
+    t = _restore(_open_session())  # 3.0 kWh at 02:30, counter 3.0
+    for x in (at(4, 30), at(4, 30) + 30):  # integration back, charger entities not yet loaded
+        t.feed(Sample(x), "twingo")
+    t.feed(Sample(at(4, 31), 2000, 7.0, True, 0.3, False, None), "twingo")
+    s = t.current
+    assert s.energy_kwh == pytest.approx(7.0)
+    assert s.estimated is True
+    assert s.cost == pytest.approx(3.0 * 0.2 + 4.0 * 0.3)  # gap energy at the return price
+    assert s.has_off_peak_source is True and s.peak.kwh == pytest.approx(7.0)
+    # Recovered energy is not drawn as a power spike on the curve.
+    assert max(p.w for p in s.curve) == pytest.approx(2000, rel=0.01)
+
+
+def test_plug_entity_blip_does_not_split_a_long_pause():
+    def make(t):
+        charging = at(22) <= t < at(2, 39, 1) or at(8, 4, 1) <= t < at(8, 15, 1)
+        plugged = None if t == at(6, 0, 1) else at(21, 58) <= t < at(8, 20, 1)
+        return Sample(t, 2200 if charging else 0, None, plugged, 0.2, True, None)
+
+    done = run(make_tracker(), at(21, 55), at(9, 0, 1), make)
+    assert len(done) == 1
+    assert done[0].charge_end == at(8, 15, 1) and done[0].unplugged_at == at(8, 20, 1)
+
+
+def test_soc_start_is_first_reading_when_charge_starts_before_it():
+    def make(t):
+        soc = None if t < at(22, 8) else 40 + (t - at(22, 8)) / 600
+        return Sample(
+            t, 2200 if at(22) <= t < at(1, 0, 1) else 0, None, t >= at(21, 59), 0.2, True, soc
+        )
+
+    tracker = make_tracker()
+    run(tracker, at(21, 58), at(23), make)
+    assert tracker.current.soc_start == 40
+    assert tracker.current.soc_end == pytest.approx(40 + 52 * 60 / 600)

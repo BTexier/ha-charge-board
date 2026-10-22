@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
-from .const import CURVE_STEP_S, MIN_SESSION_KWH, TICK_SECONDS
+from .const import CURVE_STEP_S, MAX_CHARGER_W, MIN_SESSION_KWH, TICK_SECONDS
 from .model import CurvePoint, Session, TariffSlice
 
 
@@ -30,22 +30,11 @@ class TrackerSettings:
     curve_step_s: int = CURVE_STEP_S
 
 
-def _interval_kwh(a: Sample, b: Sample) -> float:
-    """Energy of the interval: counter delta if plausible, else power trapezoid, else 0.
-
-    Counter decrease: a reset (delta = e1) only if e1 <= 0.5 x e0, otherwise jitter (0).
-    Counter increase above max(known power) x dt x 1.5 + 0.01 kWh is a glitch: fall back
-    to the power trapezoid.
-    """
-    dt = b.t - a.t
-    known = [p for p in (a.power_w, b.power_w) if p is not None]
-    trapezoid = sum(known) / 2 * dt / 3_600_000 if len(known) == 2 else 0.0
-    if a.energy_kwh is None or b.energy_kwh is None:
-        return trapezoid
-    e0, e1 = a.energy_kwh, b.energy_kwh
-    delta = _counter_delta(e0, e1)
-    plausible = max(known, default=0.0) * dt * 1.5 / 3_600_000 + 0.01
-    return delta if delta <= plausible else trapezoid
+def _trapezoid(a: Sample, b: Sample) -> float:
+    """Power trapezoid of the interval (kWh); 0 unless both powers are known."""
+    if a.power_w is None or b.power_w is None:
+        return 0.0
+    return (a.power_w + b.power_w) / 2 * (b.t - a.t) / 3_600_000
 
 
 def _counter_delta(e0: float, e1: float) -> float:
@@ -84,6 +73,8 @@ class SessionTracker:
         self._plugged_at: float | None = None  # last False -> True transition
         self._price: float | None = None  # last known price
         self._soc: float | None = None  # battery level since last plug-in / session close
+        # Last counter reading (t of its first sighting, kWh): survives unavailable readings.
+        self._counter_ref: tuple[float, float] | None = None
 
     @property
     def current(self) -> Session | None:
@@ -131,23 +122,45 @@ class SessionTracker:
         if dt > 2 * TICK_SECONDS:
             # Restart gap: the counter is the only truth, priced at the NEW sample.
             sess.estimated = True
-            if a.energy_kwh is not None and b.energy_kwh is not None:
-                price = b.price if b.price is not None else self._price
-                self._credit(sess, _counter_delta(a.energy_kwh, b.energy_kwh), price, b.off_peak)
+            price = b.price if b.price is not None else self._price
+            self._credit(sess, self._kwh(a, b, gap=True), price, b.off_peak)
             return
-        kwh = _interval_kwh(a, b)
+        kwh = self._kwh(a, b, gap=False)
         if charging:
             sess.charging_s += dt
             sess.charge_end = b.t
+        # Energy the counter recovers after an outage (restart with entities not yet loaded)
+        # is not drawn: it would be a power spike in a 30 s interval.
+        if a.energy_kwh is not None or self._counter_ref is None:
+            # Curve: a point per window of >= curve_step_s, starting at a sample time.
+            # Intervals of an open session are contiguous: the window's elapsed time is a.t - p.t.
+            if not sess.curve or a.t >= sess.curve[-1].t + s.curve_step_s:
+                sess.curve.append(CurvePoint(a.t, 0.0, a.off_peak))
+            p = sess.curve[-1]
+            p.w = (p.w * (a.t - p.t) + kwh * 3_600_000) / (b.t - p.t)
+        # Price and slice of the start sample (_price already includes a.price); when it
+        # knew nothing (entities not loaded yet), those of the end sample.
+        price = self._price if a.price is not None or b.price is None else b.price
+        off_peak = a.off_peak if a.off_peak is not None else b.off_peak
+        self._credit(sess, kwh, price, off_peak)
 
-        # Curve: a point per window of >= curve_step_s, starting at a sample time. Intervals
-        # of an open session are contiguous, so the window's elapsed time is a.t - p.t.
-        if not sess.curve or a.t >= sess.curve[-1].t + s.curve_step_s:
-            sess.curve.append(CurvePoint(a.t, 0.0, a.off_peak))
-        p = sess.curve[-1]
-        p.w = (p.w * (a.t - p.t) + kwh * 3_600_000) / (b.t - p.t)
+    def _kwh(self, a: Sample, b: Sample, gap: bool) -> float:
+        """Energy of the interval a -> b.
 
-        self._credit(sess, kwh, self._price, a.off_peak)  # _price already includes a.price
+        The counter is the primary source: its increase since the last known reading
+        (`_counter_ref`, kept across unavailable readings and outside sessions), so a jump
+        published a fraction of a second after the power still counts in full. A jump above
+        MAX_CHARGER_W over the time since that reading is a glitch: power trapezoid instead
+        (nothing across a restart gap). Without any counter reading: power trapezoid.
+        """
+        ref = self._counter_ref
+        fallback = 0.0 if gap else _trapezoid(a, b)
+        if ref is None:
+            return fallback
+        if b.energy_kwh is None:
+            return 0.0  # its next reading credits the whole increase
+        delta = _counter_delta(ref[1], b.energy_kwh)
+        return delta if delta <= MAX_CHARGER_W * (b.t - ref[0]) / 3_600_000 + 0.01 else fallback
 
     def _credit(
         self, sess: Session, kwh: float, price: float | None, off_peak: bool | None
@@ -174,8 +187,9 @@ class SessionTracker:
         if self._plugged and sample.plugged is False:
             sess.unplugged_at = sample.t
         # Gap rule also covers a plug entity stuck at False, so a session can never stay open.
+        # Not on a None blip of a known plug entity (1 s unavailable at every HA start).
         elif not (
-            sample.plugged is not True
+            (sample.plugged is False or (sample.plugged is None and self._plugged is None))
             and sample.t - sess.charge_end > self.settings.gap_hours * 3600
         ):
             return None
@@ -194,12 +208,17 @@ class SessionTracker:
             self._plugged = sample.plugged
         if sample.price is not None:
             self._price = sample.price
+        e = sample.energy_kwh
+        if e is not None and (self._counter_ref is None or e != self._counter_ref[1]):
+            self._counter_ref = (sample.t, e)
         if self._plugged is False:
             self._soc = None  # unplugged: the next car's level is unknown until it reports
         elif sample.soc is not None:
             self._soc = sample.soc
             if self._session is not None:
                 self._session.soc_end = sample.soc
+                if self._session.soc_start is None:  # charge started before the first reading
+                    self._session.soc_start = sample.soc
 
     def to_dict(self) -> dict:
         return {
@@ -210,6 +229,7 @@ class SessionTracker:
             "plugged_at": self._plugged_at,
             "price": self._price,
             "soc": self._soc,
+            "counter_ref": self._counter_ref,
         }
 
     @classmethod
@@ -225,4 +245,6 @@ class SessionTracker:
         tracker._plugged_at = d.get("plugged_at")
         tracker._price = d.get("price")
         tracker._soc = d.get("soc")
+        ref = d.get("counter_ref")
+        tracker._counter_ref = tuple(ref) if ref else None
         return tracker
