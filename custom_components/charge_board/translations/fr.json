@@ -1,5 +1,11 @@
 {
   "config": {
+    "step": {
+      "user": {
+        "title": "Charge Board",
+        "description": "Enregistre les sessions de recharge de véhicules électriques à partir de vos entités existantes. Ajoutez ensuite les bornes et les véhicules depuis la page de l'intégration."
+      }
+    },
     "abort": {
       "single_instance_allowed": "Charge Board est déjà configuré."
     }

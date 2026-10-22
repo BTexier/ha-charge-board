@@ -1,5 +1,11 @@
 {
   "config": {
+    "step": {
+      "user": {
+        "title": "Charge Board",
+        "description": "Records EV charging sessions from your existing entities. Add chargers and vehicles afterwards from the integration page."
+      }
+    },
     "abort": {
       "single_instance_allowed": "Charge Board is already configured."
     }
