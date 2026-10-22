@@ -365,3 +365,16 @@ def test_soc_start_is_first_reading_when_charge_starts_before_it():
     run(tracker, at(21, 58), at(23), make)
     assert tracker.current.soc_start == 40
     assert tracker.current.soc_end == pytest.approx(40 + 52 * 60 / 600)
+
+
+@pytest.mark.parametrize("minutes", [15, 30])
+def test_long_counter_dropout_to_zero_is_not_counted_twice(minutes):
+    def make(t):
+        e = min(max(t - at(1), 0), 4 * 3600) / 3600 * 2.15
+        if at(3) <= t < at(3) + minutes * 60:
+            e = 0.0
+        return Sample(t, 2150 if at(1) <= t < at(5) else 0, e, t < at(5, 30), 0.2, False, None)
+
+    done = run(make_tracker(), at(0), at(6), make)
+    assert len(done) == 1
+    assert done[0].energy_kwh == pytest.approx(8.6, abs=0.1)

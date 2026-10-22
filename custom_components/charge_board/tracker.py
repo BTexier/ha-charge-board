@@ -75,6 +75,8 @@ class SessionTracker:
         self._soc: float | None = None  # battery level since last plug-in / session close
         # Last counter reading (t of its first sighting, kWh): survives unavailable readings.
         self._counter_ref: tuple[float, float] | None = None
+        self._ref_max_w: float | None = None  # highest known power since that reading
+        self._ref_kwh = 0.0  # power trapezoid since that reading (restart gaps excluded)
 
     @property
     def current(self) -> Session | None:
@@ -95,6 +97,8 @@ class SessionTracker:
         self._last = sample
         if prev is not None:
             self._interval(prev, sample, vehicle_id)
+            if sample.t - prev.t <= 2 * TICK_SECONDS:
+                self._ref_kwh += _trapezoid(prev, sample)
         finished = self._close_if_done(sample)
         self._absorb(sample)
         return finished
@@ -150,17 +154,23 @@ class SessionTracker:
         The counter is the primary source: its increase since the last known reading
         (`_counter_ref`, kept across unavailable readings and outside sessions), so a jump
         published a fraction of a second after the power still counts in full. A jump above
-        MAX_CHARGER_W over the time since that reading is a glitch: power trapezoid instead
-        (nothing across a restart gap). Without any counter reading: power trapezoid.
+        1.5 x the highest power known since that reading (MAX_CHARGER_W when none is known, or
+        across a restart gap) is a glitch, e.g. the counter coming back after a dropout to 0:
+        the power trapezoid since that reading instead (all its intervals credited 0, nothing
+        is counted twice; nothing across a restart gap). Without any counter reading: power
+        trapezoid.
         """
         ref = self._counter_ref
-        fallback = 0.0 if gap else _trapezoid(a, b)
         if ref is None:
-            return fallback
+            return 0.0 if gap else _trapezoid(a, b)
         if b.energy_kwh is None:
             return 0.0  # its next reading credits the whole increase
         delta = _counter_delta(ref[1], b.energy_kwh)
-        return delta if delta <= MAX_CHARGER_W * (b.t - ref[0]) / 3_600_000 + 0.01 else fallback
+        powers = [p for p in (self._ref_max_w, b.power_w) if p is not None]
+        max_w = MAX_CHARGER_W if gap or not powers else max(powers) * 1.5
+        if delta <= max_w * (b.t - ref[0]) / 3_600_000 + 0.01:
+            return delta
+        return 0.0 if gap else self._ref_kwh + _trapezoid(a, b)
 
     def _credit(
         self, sess: Session, kwh: float, price: float | None, off_peak: bool | None
@@ -211,6 +221,9 @@ class SessionTracker:
         e = sample.energy_kwh
         if e is not None and (self._counter_ref is None or e != self._counter_ref[1]):
             self._counter_ref = (sample.t, e)
+            self._ref_max_w, self._ref_kwh = None, 0.0
+        if sample.power_w is not None:
+            self._ref_max_w = max(self._ref_max_w or 0.0, sample.power_w)
         if self._plugged is False:
             self._soc = None  # unplugged: the next car's level is unknown until it reports
         elif sample.soc is not None:
@@ -230,6 +243,8 @@ class SessionTracker:
             "price": self._price,
             "soc": self._soc,
             "counter_ref": self._counter_ref,
+            "ref_max_w": self._ref_max_w,
+            "ref_kwh": self._ref_kwh,
         }
 
     @classmethod
@@ -247,4 +262,6 @@ class SessionTracker:
         tracker._soc = d.get("soc")
         ref = d.get("counter_ref")
         tracker._counter_ref = tuple(ref) if ref else None
+        tracker._ref_max_w = d.get("ref_max_w")
+        tracker._ref_kwh = d.get("ref_kwh", 0.0)
         return tracker
