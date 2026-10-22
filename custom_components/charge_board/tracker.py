@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
-from .const import MIN_SESSION_KWH
+from .const import MIN_SESSION_KWH, TICK_SECONDS
 from .model import CurvePoint, Session, TariffSlice
 
 
@@ -43,12 +43,16 @@ def _interval_kwh(a: Sample, b: Sample) -> float:
     if a.energy_kwh is None or b.energy_kwh is None:
         return trapezoid
     e0, e1 = a.energy_kwh, b.energy_kwh
-    if e1 < e0:
-        delta = e1 if e1 <= 0.5 * e0 else 0.0
-    else:
-        delta = e1 - e0
+    delta = _counter_delta(e0, e1)
     plausible = max(known, default=0.0) * dt * 1.5 / 3_600_000 + 0.01
     return delta if delta <= plausible else trapezoid
+
+
+def _counter_delta(e0: float, e1: float) -> float:
+    """Counter increase; a decrease is a reset (delta = e1) only if e1 <= 0.5 x e0, else jitter."""
+    if e1 < e0:
+        return e1 if e1 <= 0.5 * e0 else 0.0
+    return e1 - e0
 
 
 def _add(slice_: TariffSlice, kwh: float, cost: float | None) -> None:
@@ -117,6 +121,13 @@ class SessionTracker:
         if sess is None:
             return
         dt = b.t - a.t
+        if dt > 2 * TICK_SECONDS:
+            # Restart gap: the counter is the only truth, priced at the NEW sample.
+            sess.estimated = True
+            if a.energy_kwh is not None and b.energy_kwh is not None:
+                price = b.price if b.price is not None else self._price
+                self._credit(sess, _counter_delta(a.energy_kwh, b.energy_kwh), price, b.off_peak)
+            return
         kwh = _interval_kwh(a, b)
         if charging:
             sess.charging_s += dt
@@ -129,18 +140,23 @@ class SessionTracker:
         p = sess.curve[-1]
         p.w = (p.w * (a.t - p.t) + kwh * 3_600_000) / (b.t - p.t)
 
+        self._credit(sess, kwh, self._price, a.off_peak)  # _price already includes a.price
+
+    def _credit(
+        self, sess: Session, kwh: float, price: float | None, off_peak: bool | None
+    ) -> None:
         if kwh <= 0:
             return
-        price = self._price if s.priced else None  # _price already includes a.price
+        price = price if self.settings.priced else None
         cost = None if price is None else kwh * price
-        if s.priced and price is None:
+        if self.settings.priced and price is None:
             sess.estimated = True
-        if a.off_peak is None:
+        if off_peak is None:
             sess.has_off_peak_source = False
         sess.energy_kwh += kwh
         if cost is not None:
             sess.cost = (sess.cost or 0.0) + cost
-        _add(sess.off_peak if a.off_peak else sess.peak, kwh, cost)
+        _add(sess.off_peak if off_peak else sess.peak, kwh, cost)
         key = "none" if price is None else f"{price:.4f}"
         _add(sess.by_price.setdefault(key, TariffSlice()), kwh, cost)
 

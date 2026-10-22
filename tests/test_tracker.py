@@ -212,3 +212,43 @@ def test_state_round_trip_resumes_identically():
     second = SessionTracker.from_dict(state, first.settings, lambda: f"s{next(ids)}")
     assert second.current == first.current
     assert run(second, at(2, 0, 1) + 30, at(8, 0, 1), night) == reference
+
+
+def _open_session(counter=True):
+    """Open session with 3.0 kWh at 0.2 EUR/kWh (2 kW for 1.5 h); last sample at 02:30."""
+    t = make_tracker()
+
+    def make(x):
+        e = (x - at(1)) / 3600 * 2.0 if counter else None
+        return Sample(x, 2000, e, True, 0.2, False, None)
+
+    run(t, at(1), at(2, 30), make)
+    return t
+
+
+def _restore(tracker):
+    d = json.loads(json.dumps(tracker.to_dict()))
+    return SessionTracker.from_dict(d, tracker.settings, lambda: "s9")
+
+
+def test_restart_mid_session_with_counter():
+    t = _restore(_open_session())
+    assert t.current.energy_kwh == pytest.approx(3.0)
+    t.feed(Sample(at(4, 30), 2000, 7.0, True, 0.3, False, None), "twingo")
+    s = t.current
+    assert s.energy_kwh == pytest.approx(7.0) and s.estimated is True
+    assert s.cost == pytest.approx(3.0 * 0.2 + 4.0 * 0.3)
+    assert s.peak.kwh == pytest.approx(7.0)
+
+
+def test_restart_without_counter_marks_estimated():
+    t = _restore(_open_session(counter=False))
+    before = t.current.energy_kwh
+    t.feed(Sample(at(4, 30), 2000, None, True, 0.3, False, None), "twingo")
+    assert t.current.energy_kwh == before and t.current.estimated is True
+
+
+def test_restart_gap_ignores_plausibility_check():
+    t = _restore(_open_session())
+    t.feed(Sample(at(4, 30), 0, 9.0, True, 0.2, False, None), "twingo")
+    assert t.current.energy_kwh == pytest.approx(9.0)
