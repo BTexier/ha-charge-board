@@ -1,0 +1,107 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "Charge Board is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tariff",
+        "description": "Either a price sensor, or two fixed prices with an off-peak source (binary sensor or time windows). Leave everything empty to record sessions without cost.",
+        "data": {
+          "price_entity": "Price sensor (per kWh)",
+          "off_peak_price": "Off-peak price (per kWh)",
+          "peak_price": "Peak price (per kWh)",
+          "off_peak_entity": "Off-peak now (binary sensor)",
+          "off_peak_windows": "Off-peak windows",
+          "overview_style": "Overview style"
+        },
+        "data_description": {
+          "price_entity": "Takes precedence over the fixed prices.",
+          "off_peak_windows": "For example 22:00-06:00, several separated by commas. Ignored when an off-peak binary sensor is set."
+        }
+      }
+    },
+    "error": {
+      "invalid_windows": "Use HH:MM-HH:MM, several separated by commas (e.g. 22:00-06:00, 12:00-14:00)."
+    }
+  },
+  "config_subentries": {
+    "charger": {
+      "initiate_flow": {
+        "user": "Add charger"
+      },
+      "entry_type": "Charger",
+      "step": {
+        "user": {
+          "title": "Add charger",
+          "data": {
+            "name": "Name",
+            "power_entity": "Charging power",
+            "energy_entity": "Energy (kWh)",
+            "plug_entity": "Plugged in",
+            "plugged_states": "States meaning plugged in",
+            "switch_entity": "Charging switch",
+            "power_threshold_w": "Charging threshold",
+            "gap_hours": "Session gap without plug entity"
+          },
+          "data_description": {
+            "power_entity": "Power sensor in W or kW.",
+            "energy_entity": "Session or total energy counter of the charger; when set, session energy comes from it.",
+            "plug_entity": "Binary sensor, or a sensor with the states below.",
+            "plugged_states": "Leave empty for a binary sensor (on = plugged in).",
+            "switch_entity": "Not used yet.",
+            "power_threshold_w": "Charging when the power is above this value.",
+            "gap_hours": "Without a plug entity, a session ends after this long without charging."
+          }
+        }
+      }
+    },
+    "vehicle": {
+      "initiate_flow": {
+        "user": "Add vehicle"
+      },
+      "entry_type": "Vehicle",
+      "step": {
+        "user": {
+          "title": "Add vehicle",
+          "data": {
+            "name": "Name",
+            "capacity_kwh": "Usable capacity",
+            "soc_entity": "Battery level",
+            "target_entity": "Target level entity",
+            "target_fixed": "Fixed target level"
+          },
+          "data_description": {
+            "soc_entity": "Sensor in %. Without it, sessions have no start and end level.",
+            "target_fixed": "Used when no target entity is set."
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "overview_style": {
+      "options": {
+        "detailed": "Detailed",
+        "compact": "Compact"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "vehicle": {
+        "name": "Vehicle"
+      }
+    },
+    "sensor": {
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "session_cost": {
+        "name": "Session cost"
+      }
+    }
+  }
+}

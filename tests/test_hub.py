@@ -1,0 +1,92 @@
+import pytest
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
+
+CHARGER = {
+    "name": "Dé",
+    "power_entity": "sensor.p",
+    "plug_entity": "binary_sensor.plug",
+    "plugged_states": [],
+    "power_threshold_w": 100,
+    "gap_hours": 3,
+}
+VEHICLE = {"name": "Twingo", "capacity_kwh": 27.5, "soc_entity": "sensor.soc", "target_fixed": 100}
+
+
+@pytest.fixture
+async def setup(hass):
+    hass.states.async_set("sensor.p", "2200", {"unit_of_measurement": "W"})
+    hass.states.async_set("binary_sensor.plug", "on")
+    hass.states.async_set("sensor.soc", "40")
+    entry = MockConfigEntry(
+        domain="charge_board",
+        options={"off_peak_price": 0.2, "peak_price": 0.2},
+        subentries_data=[
+            {"data": CHARGER, "subentry_type": "charger", "title": "Dé", "unique_id": None},
+            {"data": VEHICLE, "subentry_type": "vehicle", "title": "Twingo", "unique_id": None},
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    cid = next(s.subentry_id for s in entry.subentries.values() if s.subentry_type == "charger")
+    return entry, cid
+
+
+async def _run(hass, freezer, seconds):
+    for _ in range(seconds // 30):
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+
+async def test_power_in_kw_is_converted(hass, setup):
+    entry, cid = setup
+    hass.states.async_set("sensor.p", "2.2", {"unit_of_measurement": "kW"})
+    assert entry.runtime_data.sample_for(cid).power_w == 2200
+
+
+async def test_unavailable_is_none(hass, setup):
+    entry, cid = setup
+    hass.states.async_set("sensor.p", "unavailable")
+    assert entry.runtime_data.sample_for(cid).power_w is None
+
+
+async def test_steady_power_still_accumulates(hass, setup, freezer):
+    entry, cid = setup
+    await _run(hass, freezer, 3600)
+    live = entry.runtime_data.live(cid)
+    assert live["state"] == "charging"
+    assert live["energy_kwh"] == pytest.approx(2.2, abs=0.01)
+    assert live["cost"] == pytest.approx(0.44, abs=0.01)
+    assert live["session"]["soc_start"] == 40
+    assert float(hass.states.get("sensor.de_energie_session").state) == pytest.approx(2.2, abs=0.01)
+    assert hass.states.get("sensor.de_cout_session").attributes["unit_of_measurement"] == "EUR"
+    assert hass.states.get("select.de_vehicule").state == "Twingo"
+
+
+async def test_session_persists_and_is_announced(hass, setup, freezer):
+    entry, cid = setup
+    announced = []
+    async_dispatcher_connect(hass, "charge_board_updated", lambda: announced.append(1))
+    await _run(hass, freezer, 600)
+    hass.states.async_set("sensor.p", "0", {"unit_of_measurement": "W"})
+    freezer.tick(5)
+    hass.states.async_set("binary_sensor.plug", "off")
+    await hass.async_block_till_done()
+    sessions = entry.runtime_data.store.sessions
+    assert len(sessions) == 1
+    assert sessions[0].energy_kwh == pytest.approx(2.2 / 6, abs=0.01)
+    assert sessions[0].vehicle_id is not None
+    assert announced
+    assert entry.runtime_data.live(cid)["state"] == "free"
+
+
+async def test_open_session_survives_reload(hass, setup, freezer):
+    entry, cid = setup
+    await _run(hass, freezer, 600)
+    before = entry.runtime_data.live(cid)["energy_kwh"]
+    assert before > 0.3
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.live(cid)["energy_kwh"] == pytest.approx(before)
