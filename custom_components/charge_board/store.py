@@ -24,6 +24,7 @@ class SessionStore:
         self._trackers = Store(hass, 1, f"{DOMAIN}.{entry_id}.trackers")
         self.sessions: list[Session] = []
         self.trackers_state: dict[str, dict] = {}
+        self._trackers_pending = False
 
     async def async_load(self) -> None:
         data = await self._sessions.async_load() or {}
@@ -42,10 +43,21 @@ class SessionStore:
 
     @callback
     def async_save_trackers(self) -> None:
-        """Delayed save; Store also flushes it on Home Assistant's final write."""
-        self._trackers.async_delay_save(lambda: self.trackers_state, TRACKERS_SAVE_DELAY)
+        """Save within TRACKERS_SAVE_DELAY; Store also flushes it on Home Assistant's final write.
+
+        async_delay_save is a debounce (each call pushes the write back), and this is called on
+        every tick: only schedule when no write is pending, or nothing is written until stop.
+        """
+        if not self._trackers_pending:
+            self._trackers_pending = True
+            self._trackers.async_delay_save(self._trackers_data, TRACKERS_SAVE_DELAY)
+
+    def _trackers_data(self) -> dict[str, dict]:
+        self._trackers_pending = False
+        return self.trackers_state
 
     async def async_flush_trackers(self) -> None:
+        self._trackers_pending = False  # async_save cancels a pending delayed write
         await self._trackers.async_save(self.trackers_state)
 
 

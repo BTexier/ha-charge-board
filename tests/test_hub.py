@@ -1,6 +1,11 @@
 import pytest
+from homeassistant.core import State
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 
 CHARGER = {
     "name": "Dé",
@@ -11,6 +16,7 @@ CHARGER = {
     "gap_hours": 3,
 }
 VEHICLE = {"name": "Twingo", "capacity_kwh": 27.5, "soc_entity": "sensor.soc", "target_fixed": 100}
+ZOE = {"name": "Zoe", "capacity_kwh": 52, "soc_entity": "sensor.soc2", "target_fixed": 100}
 
 
 @pytest.fixture
@@ -18,12 +24,14 @@ async def setup(hass):
     hass.states.async_set("sensor.p", "2200", {"unit_of_measurement": "W"})
     hass.states.async_set("binary_sensor.plug", "on")
     hass.states.async_set("sensor.soc", "40")
+    hass.states.async_set("sensor.soc2", "70")
     entry = MockConfigEntry(
         domain="charge_board",
         options={"off_peak_price": 0.2, "peak_price": 0.2},
         subentries_data=[
             {"data": CHARGER, "subentry_type": "charger", "title": "Dé", "unique_id": None},
             {"data": VEHICLE, "subentry_type": "vehicle", "title": "Twingo", "unique_id": None},
+            {"data": ZOE, "subentry_type": "vehicle", "title": "Zoe", "unique_id": None},
         ],
     )
     entry.add_to_hass(hass)
@@ -90,3 +98,29 @@ async def test_open_session_survives_reload(hass, setup, freezer):
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.runtime_data.live(cid)["energy_kwh"] == pytest.approx(before)
+
+
+async def test_trackers_are_saved_while_ticking(hass, setup, freezer, hass_storage):
+    entry, cid = setup
+    key = f"charge_board.{entry.entry_id}.trackers"
+    await _run(hass, freezer, 90)
+    assert hass_storage[key]["data"][cid]["session"]["open"] is True
+
+
+@pytest.fixture
+def restore_zoe(hass):
+    mock_restore_cache(hass, [State("select.de_vehicule", "Zoe")])
+
+
+async def test_restored_vehicle_is_used_after_reload(hass, restore_zoe, setup, freezer):
+    entry, cid = setup
+    zoe = next(s.subentry_id for s in entry.subentries.values() if s.title == "Zoe")
+    await _run(hass, freezer, 300)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("select.de_vehicule").state == "Zoe"
+    await _run(hass, freezer, 60)
+    session = entry.runtime_data.live(cid)["session"]
+    assert session["vehicle_id"] == zoe
+    assert session["soc_start"] == 70
+    assert session["soc_end"] == 70

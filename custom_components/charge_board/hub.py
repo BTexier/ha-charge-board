@@ -82,6 +82,7 @@ class Hub:
         self._unsubs: list = []
 
     async def async_start(self) -> None:
+        """Load the store and restore the trackers (no listening yet)."""
         await self.store.async_load()
         for cid, c in self.chargers.items():
             settings = TrackerSettings(
@@ -98,6 +99,10 @@ class Hub:
         # Also drops the states of removed chargers.
         self.store.trackers_state = {cid: t.to_dict() for cid, t in self.trackers.items()}
 
+    @callback
+    def async_start_feeding(self) -> None:
+        """Subscribe and feed; called once the entities are set up, so the first feed already
+        uses the restored vehicle selection (not the default one)."""
         keys = ("power_entity", "energy_entity", "plug_entity", "soc_entity")
         entities = {
             d[k]
