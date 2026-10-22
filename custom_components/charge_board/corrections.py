@@ -48,7 +48,7 @@ def merge_sessions(a: Session, b: Session) -> Session:
         off_peak=_slice_add(old.off_peak, new.off_peak),
         peak=_slice_add(old.peak, new.peak),
         by_price=by_price,
-        has_off_peak_source=old.has_off_peak_source or new.has_off_peak_source,
+        has_off_peak_source=old.has_off_peak_source and new.has_off_peak_source,
         curve=sorted((replace(p) for p in old.curve + new.curve), key=lambda p: p.t),
         estimated=old.estimated or new.estimated,
         edited=True,

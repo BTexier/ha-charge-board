@@ -28,6 +28,7 @@ def mk(id, t0, t1, kwh, cost, **kw):
 
 def test_merge_adds_up_and_keeps_bounds():
     a = mk("a", 1000, 2000, 2.0, 0.4, soc_start=10, soc_end=30)
+    a.has_off_peak_source = True
     b = mk("b", 3000, 4000, 3.0, 0.6, soc_start=31, soc_end=60, estimated=True)
     m = merge_sessions(b, a)
     assert m.edited is True
@@ -41,6 +42,7 @@ def test_merge_adds_up_and_keeps_bounds():
     assert (m.plugged_at, m.charge_start, m.soc_start) == (990, 1000, 10)
     assert (m.charge_end, m.unplugged_at, m.soc_end) == (4000, 4010, 60)
     assert m.estimated is True
+    assert m.has_off_peak_source is False
     assert [p.t for p in m.curve] == [1000, 3000]
 
 
