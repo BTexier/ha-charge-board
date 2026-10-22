@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from .const import CURVE_WINDOW_MAX_S
 from .model import CurvePoint, Session, TariffSlice
 
 
@@ -62,7 +63,7 @@ def _curve_split(s: Session, at: float) -> tuple[list[CurvePoint], list[CurvePoi
     e_left = e_right = 0.0
     for i, p in enumerate(s.curve):
         end = s.curve[i + 1].t if i + 1 < len(s.curve) else (s.charge_end or p.t)
-        end = max(end, p.t)
+        end = max(min(end, p.t + CURVE_WINDOW_MAX_S), p.t)
         if end <= at:
             left.append(replace(p))
             e_left += p.w * (end - p.t) / 3.6e6

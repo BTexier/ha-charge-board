@@ -11,9 +11,19 @@ export function timeAt(x: number, width: number, start: number, end: number): nu
   return start + (Math.min(Math.max(x, 0), width) / width) * (end - start);
 }
 
+/**
+ * A curve point covers at most this long (CURVE_WINDOW_MAX_S in const.py: 300 s window + 2 ticks);
+ * past that, e.g. between the parts of a merged session, the power is 0 and there is no band.
+ */
+export const CURVE_WINDOW_MAX_S = 360;
+
+/** End of the window of point i (capped, never before its start). */
+const windowEnd = (curve: Point[], i: number, end: number) =>
+  Math.max(Math.min(i + 1 < curve.length ? curve[i + 1].t : end, curve[i].t + CURVE_WINDOW_MAX_S), curve[i].t);
+
 const r = (v: number) => Math.round(v * 10) / 10;
 
-/** Step path: each point holds its power until the next one (the last until `end`). */
+/** Step path: each point holds its power until the next one (the last until `end`), capped. */
 export function pathFor(
   curve: Point[],
   width: number,
@@ -27,8 +37,10 @@ export function pathFor(
   const x = (t: number) => r(((t - start) / span) * width);
   const y = (w: number) => r(height - (Math.max(w, 0) / max) * height);
   const parts = curve.map((p, i) => {
+    const to = windowEnd(curve, i, end);
     const next = i + 1 < curve.length ? curve[i + 1].t : end;
-    return `${i ? "L" : "M"}${x(p.t)} ${y(p.w)} L${x(Math.max(next, p.t))} ${y(p.w)}`;
+    const step = `${i ? "L" : "M"}${x(p.t)} ${y(p.w)} L${x(to)} ${y(p.w)}`;
+    return to < next ? `${step} L${x(to)} ${y(0)} L${x(next)} ${y(0)}` : step; // gap: no power
   });
   return parts.join(" ");
 }
@@ -38,7 +50,7 @@ export function bandsFor(curve: Point[], end: number): { from: number; to: numbe
   const bands: { from: number; to: number }[] = [];
   curve.forEach((p, i) => {
     if (!p.off_peak) return;
-    const to = i + 1 < curve.length ? curve[i + 1].t : end;
+    const to = windowEnd(curve, i, end);
     const last = bands[bands.length - 1];
     if (last && last.to === p.t) last.to = to;
     else bands.push({ from: p.t, to });

@@ -65,32 +65,32 @@ def test_split_conserves_energy_and_cost():
     s = mk(
         "a",
         0,
-        4000,
+        1200,
         4.0,
         1.0,
-        curve=[
+        curve=[  # 300 s windows, as the tracker records them
             CurvePoint(0, 3000),
-            CurvePoint(1000, 3000, True),
-            CurvePoint(2000, 6000),
-            CurvePoint(3000, 3000),
+            CurvePoint(300, 3000, True),
+            CurvePoint(600, 6000),
+            CurvePoint(900, 3000),
         ],
     )
-    s.energy_kwh = sum(p.w for p in s.curve) * 1000 / 3600 / 1000
-    a, b = split_session(s, 1500, "new")
+    s.energy_kwh = sum(p.w for p in s.curve) * 300 / 3.6e6
+    a, b = split_session(s, 450, "new")
     assert a.edited and b.edited
     assert b.id == "new" and a.id == "a"
     assert a.energy_kwh + b.energy_kwh == pytest.approx(s.energy_kwh, abs=1e-6)
     assert a.cost + b.cost == pytest.approx(1.0, abs=1e-6)
-    assert a.energy_kwh == pytest.approx((1000 * 3000 + 500 * 3000) / 3.6e6)
+    assert a.energy_kwh == pytest.approx((300 * 3000 + 150 * 3000) / 3.6e6)
     assert a.off_peak.kwh + b.off_peak.kwh == pytest.approx(s.off_peak.kwh)
     assert a.peak.cost + b.peak.cost == pytest.approx(s.peak.cost)
     assert a.by_price["0.1"].kwh + b.by_price["0.1"].kwh == pytest.approx(s.by_price["0.1"].kwh)
     assert a.charging_s + b.charging_s == pytest.approx(s.charging_s)
-    assert (a.charge_end, a.unplugged_at, a.soc_end) == (1500, None, None)
-    assert (b.charge_start, b.plugged_at, b.soc_start) == (1500, None, None)
+    assert (a.charge_end, a.unplugged_at, a.soc_end) == (450, None, None)
+    assert (b.charge_start, b.plugged_at, b.soc_start) == (450, None, None)
     assert a.soc_start == 20 and b.soc_end == 50
-    assert [p.t for p in a.curve] == [0, 1000]
-    assert [p.t for p in b.curve] == [1500, 2000, 3000]
+    assert [p.t for p in a.curve] == [0, 300]
+    assert [p.t for p in b.curve] == [450, 600, 900]
     assert b.curve[0].off_peak is True  # the cut window keeps its tariff
 
 
@@ -109,3 +109,15 @@ def test_change_vehicle_keeps_soc():
     assert r.edited is True and r.vehicle_id == "v2"
     assert (r.soc_start, r.soc_end) == (20, 50)
     assert s.vehicle_id == "v1" and s.edited is False
+
+
+def test_split_merged_session_ignores_the_gap():
+    """A curve point covers at most one window: the gap between merged parts holds no energy."""
+
+    def left_energy(gap):
+        m = merge_sessions(mk("a", 0, 600, 0.6, 0.2), mk("b", gap, gap + 600, 0.6, 0.2))
+        a, b = split_session(m, gap / 2, "n")
+        return a.energy_kwh, b.energy_kwh
+
+    assert left_energy(10_000) == pytest.approx(left_energy(100_000))
+    assert left_energy(10_000) == pytest.approx((0.6, 0.6))

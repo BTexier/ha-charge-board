@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
-from .const import MIN_SESSION_KWH, TICK_SECONDS
+from .const import CURVE_STEP_S, MIN_SESSION_KWH, TICK_SECONDS
 from .model import CurvePoint, Session, TariffSlice
 
 
@@ -27,7 +27,7 @@ class TrackerSettings:
     power_threshold_w: float
     gap_hours: float
     priced: bool
-    curve_step_s: int = 300
+    curve_step_s: int = CURVE_STEP_S
 
 
 def _interval_kwh(a: Sample, b: Sample) -> float:
