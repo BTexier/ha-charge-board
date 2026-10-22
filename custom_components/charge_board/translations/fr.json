@@ -55,7 +55,32 @@
             "power_threshold_w": "En charge quand la puissance dépasse cette valeur.",
             "gap_hours": "Sans entité de branchement, la session se termine après cette durée sans charge."
           }
+        },
+        "reconfigure": {
+          "title": "Modifier le chargeur",
+          "data": {
+            "name": "Nom",
+            "power_entity": "Puissance de charge",
+            "energy_entity": "Énergie (kWh)",
+            "plug_entity": "Branchement",
+            "plugged_states": "États signifiant « branché »",
+            "switch_entity": "Interrupteur de charge",
+            "power_threshold_w": "Seuil de charge",
+            "gap_hours": "Coupure de session sans branchement"
+          },
+          "data_description": {
+            "power_entity": "Capteur de puissance en W ou kW.",
+            "energy_entity": "Compteur d'énergie du chargeur (session ou cumulé) ; s'il est renseigné, l'énergie de la session en vient.",
+            "plug_entity": "Capteur binaire, ou capteur avec les états ci-dessous.",
+            "plugged_states": "Laisser vide pour un capteur binaire (on = branché).",
+            "switch_entity": "Pas encore utilisé.",
+            "power_threshold_w": "En charge quand la puissance dépasse cette valeur.",
+            "gap_hours": "Sans entité de branchement, la session se termine après cette durée sans charge."
+          }
         }
+      },
+      "abort": {
+        "reconfigure_successful": "Enregistré."
       }
     },
     "vehicle": {
@@ -77,7 +102,24 @@
             "soc_entity": "Capteur en %. Sans lui, les sessions n'ont pas de niveau de départ ni d'arrivée.",
             "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie."
           }
+        },
+        "reconfigure": {
+          "title": "Modifier le véhicule",
+          "data": {
+            "name": "Nom",
+            "capacity_kwh": "Capacité utile",
+            "soc_entity": "Niveau de batterie",
+            "target_entity": "Entité du niveau visé",
+            "target_fixed": "Niveau visé fixe"
+          },
+          "data_description": {
+            "soc_entity": "Capteur en %. Sans lui, les sessions n'ont pas de niveau de départ ni d'arrivée.",
+            "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie."
+          }
         }
+      },
+      "abort": {
+        "reconfigure_successful": "Enregistré."
       }
     }
   },

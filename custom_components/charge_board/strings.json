@@ -55,7 +55,32 @@
             "power_threshold_w": "Charging when the power is above this value.",
             "gap_hours": "Without a plug entity, a session ends after this long without charging."
           }
+        },
+        "reconfigure": {
+          "title": "Edit charger",
+          "data": {
+            "name": "Name",
+            "power_entity": "Charging power",
+            "energy_entity": "Energy (kWh)",
+            "plug_entity": "Plugged in",
+            "plugged_states": "States meaning plugged in",
+            "switch_entity": "Charging switch",
+            "power_threshold_w": "Charging threshold",
+            "gap_hours": "Session gap without plug entity"
+          },
+          "data_description": {
+            "power_entity": "Power sensor in W or kW.",
+            "energy_entity": "Session or total energy counter of the charger; when set, session energy comes from it.",
+            "plug_entity": "Binary sensor, or a sensor with the states below.",
+            "plugged_states": "Leave empty for a binary sensor (on = plugged in).",
+            "switch_entity": "Not used yet.",
+            "power_threshold_w": "Charging when the power is above this value.",
+            "gap_hours": "Without a plug entity, a session ends after this long without charging."
+          }
         }
+      },
+      "abort": {
+        "reconfigure_successful": "Saved."
       }
     },
     "vehicle": {
@@ -77,7 +102,24 @@
             "soc_entity": "Sensor in %. Without it, sessions have no start and end level.",
             "target_fixed": "Used when no target entity is set."
           }
+        },
+        "reconfigure": {
+          "title": "Edit vehicle",
+          "data": {
+            "name": "Name",
+            "capacity_kwh": "Usable capacity",
+            "soc_entity": "Battery level",
+            "target_entity": "Target level entity",
+            "target_fixed": "Fixed target level"
+          },
+          "data_description": {
+            "soc_entity": "Sensor in %. Without it, sessions have no start and end level.",
+            "target_fixed": "Used when no target entity is set."
+          }
         }
+      },
+      "abort": {
+        "reconfigure_successful": "Saved."
       }
     }
   },

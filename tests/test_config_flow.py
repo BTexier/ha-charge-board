@@ -75,3 +75,37 @@ async def test_options_flow_rejects_bad_windows(hass):
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"off_peak_windows": "invalid_windows"}
+
+
+async def test_reconfigure_charger_keeps_its_id(hass):
+    from homeassistant.config_entries import SOURCE_RECONFIGURE
+
+    entry = MockConfigEntry(
+        domain="charge_board",
+        subentries_data=[
+            {
+                "data": {"name": "Dé", "power_entity": "sensor.p", "power_threshold_w": 100},
+                "subentry_type": "charger",
+                "title": "Dé",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    (sid,) = entry.subentries
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "charger"), context={"source": SOURCE_RECONFIGURE, "subentry_id": sid}
+    )
+    assert result["type"] is FlowResultType.FORM and result["step_id"] == "reconfigure"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "Dé 2", "power_entity": "sensor.p", "power_threshold_w": 300},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert list(entry.subentries) == [sid]
+    assert entry.subentries[sid].data["power_threshold_w"] == 300
+    assert entry.subentries[sid].title == "Dé 2"

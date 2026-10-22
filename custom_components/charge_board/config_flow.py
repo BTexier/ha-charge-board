@@ -119,6 +119,19 @@ class _SimpleSubentryFlow(ConfigSubentryFlow):
             return self.async_create_entry(title=user_input["name"], data=user_input)
         return self.async_show_form(step_id="user", data_schema=self.schema)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit in place: the subentry id is the charger / vehicle id of its sessions."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            # The update listener reloads the entry (trackers are saved and restored).
+            return self.async_update_and_abort(
+                self._get_entry(), subentry, title=user_input["name"], data=user_input
+            )
+        schema = self.add_suggested_values_to_schema(self.schema, subentry.data)
+        return self.async_show_form(step_id="reconfigure", data_schema=schema)
+
 
 class ChargerSubentryFlow(_SimpleSubentryFlow):
     schema = CHARGER_SCHEMA
