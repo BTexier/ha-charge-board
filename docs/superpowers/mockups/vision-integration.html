@@ -1,0 +1,51 @@
+<h2>La vision : une intégration de recharge à part</h2>
+<p class="subtitle">Elle se branche sur ce qui existe déjà dans Home Assistant, quel que soit le chargeur ou la voiture. Dis-moi dans le terminal ce qui ne va pas ou manque.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:14px;align-items:start;font-size:13px">
+
+  <div>
+    <div class="label">Ce qu'elle lit (déjà dans HA)</div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:8px">
+      <b>🔌 Chargeurs</b><br>
+      puissance · énergie de session · interrupteur de charge<br>
+      <span style="color:#888">dé (lachand), Wallbox, OpenEVSE, prise…</span>
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:8px">
+      <b>🚗 Véhicules</b><br>
+      capacité (27,5 kWh) · niveau batterie* · niveau visé*<br>
+      <span style="color:#888">Renault, Tesla… ou rien (mode dégradé)</span>
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px">
+      <b>€ Tarif</b><br>
+      capteur de prix ou HC/HP fixes<br>
+      <span style="color:#888">* facultatif · réseau/solaire en option</span>
+    </div>
+  </div>
+
+  <div style="background:#eef6ff;border:2px solid #3b82f6;border-radius:12px;padding:12px">
+    <div class="label" style="color:#1d4ed8">L'intégration</div>
+    <b>Sessions</b> : découpe chaque recharge, énergie, puissance, coût au tarif du moment, % départ → arrivée, temps passé<br><br>
+    <b>Gestion</b> : coupe la charge au niveau visé<br><br>
+    <b>Statistiques</b> : par véhicule, par chargeur, par mois<br><br>
+    <b>Mode dégradé</b> : sans niveau batterie, uniquement les données de recharge mesurées
+  </div>
+
+  <div>
+    <div class="label">Ce qu'elle produit</div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:8px">
+      <b>📱 Événements → notifications</b><br>
+      branché · démarré · niveau atteint · débranché
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:8px">
+      <b>📊 Capteurs</b><br>
+      avancement · fin estimée · coût en cours · totaux du mois
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px">
+      <b>🗂 Panneau « Recharge »</b><br>
+      en cours · sessions · véhicules · chargeurs · statistiques
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">Hors périmètre (supposition) : pilotage solaire et planification, le terrain d'evcc.</p>

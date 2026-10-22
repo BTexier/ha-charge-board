@@ -1,0 +1,57 @@
+<h2>Onglet « Aperçu » : un chargeur par carte, avec la voiture branchée</h2>
+<p class="subtitle">Deux façons de présenter une carte. Clique sur celle qui te parle et dis-moi dans le terminal ce qui manque ou est en trop. Le 2ᵉ chargeur est un exemple fictif.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Recharge · Aperçu | Sessions | Véhicules | Statistiques</div>
+  <div class="mockup-body" style="background:#f3f4f6">
+
+<div class="cards">
+
+  <div class="card" data-choice="detaillee" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:#f3f4f6;font-size:13px">
+      <div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;border-left:5px solid #22c55e">
+        <div style="display:flex;justify-content:space-between"><b>🔌 Chargeur garage (dé 3,7 kW)</b><span style="color:#16a34a">● En charge</span></div>
+        <div style="margin:8px 0 4px">🚗 <b>Twingo</b> · 62 % → 100 %</div>
+        <div style="background:#e5e7eb;border-radius:4px;height:10px"><div style="width:62%;height:10px;background:#22c55e;border-radius:4px"></div></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;text-align:center">
+          <div><div style="font-size:16px"><b>2,2 kW</b></div><span style="color:#888">puissance</span></div>
+          <div><div style="font-size:16px"><b>9,4 kWh</b></div><span style="color:#888">session</span></div>
+          <div><div style="font-size:16px"><b>1,27 €</b></div><span style="color:#888">coût</span></div>
+          <div><div style="font-size:16px"><b>05:10</b></div><span style="color:#888">fin estimée</span></div>
+        </div>
+        <div style="color:#888;margin-top:6px">Branchée depuis 21:48 · en charge depuis 4 h 15 · 100 % heures creuses</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:12px;border-left:5px solid #9ca3af">
+        <div style="display:flex;justify-content:space-between"><b>🔌 Prise extérieure (exemple)</b><span style="color:#6b7280">○ Libre</span></div>
+        <div style="color:#888;margin-top:6px">Dernière session : Twingo · 21/10 · 15,6 kWh · 2,13 €</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Carte détaillée</h3>
+      <p>Tout d'un coup d'œil : voiture, niveau, puissance, énergie, coût, fin estimée. Un chargeur libre rappelle sa dernière session.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="compacte" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:#f3f4f6;font-size:13px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center">
+          <div style="width:70px;height:70px;border-radius:50%;margin:0 auto 6px;background:conic-gradient(#22c55e 62%,#e5e7eb 0);display:flex;align-items:center;justify-content:center"><div style="width:54px;height:54px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><b>62 %</b></div></div>
+          <b>Chargeur garage</b><br>🚗 Twingo · en charge<br>
+          <span style="color:#888">2,2 kW · 1,27 € · fin 05:10</span>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center">
+          <div style="width:70px;height:70px;border-radius:50%;margin:0 auto 6px;background:#e5e7eb;display:flex;align-items:center;justify-content:center"><div style="width:54px;height:54px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:#888">libre</div></div>
+          <b>Prise extérieure</b><br><span style="color:#888">aucun véhicule</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Tuiles compactes</h3>
+      <p>Une jauge de batterie par chargeur, l'essentiel en dessous ; le détail s'ouvre en touchant la tuile. Plus lisible avec plusieurs chargeurs, surtout sur téléphone.</p>
+    </div>
+  </div>
+
+</div>
+  </div>
+</div>

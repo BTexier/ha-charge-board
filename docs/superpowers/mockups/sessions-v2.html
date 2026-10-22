@@ -1,0 +1,51 @@
+<h2>Onglet « Sessions » : la liste, puis le détail d'une session</h2>
+<p class="subtitle">v2 : colonnes Début et Fin ajoutées. Dis-moi dans le terminal ce qui manque ou est en trop.</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">Recharge · Aperçu | <b>Sessions</b> | Véhicules | Statistiques</div>
+    <div class="mockup-body" style="font-size:13px;background:#f3f4f6">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <span class="mock-input" style="padding:3px 8px">Véhicule : tous ▾</span>
+        <span class="mock-input" style="padding:3px 8px">Chargeur : tous ▾</span>
+        <span class="mock-input" style="padding:3px 8px">Octobre 2026 ▾</span>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:10px;margin-bottom:8px">
+        <b>Octobre</b> · 4 sessions · 45,3 kWh · <b>6,13 €</b> · 91 % HC
+      </div>
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:10px">
+        <tr style="color:#888;text-align:left"><th style="padding:6px">Début</th><th>Fin</th><th>Véhicule</th><th>%</th><th>kWh</th><th>Durée</th><th>Coût</th></tr>
+        <tr style="border-top:1px solid #eee;background:#eef6ff"><td style="padding:6px">Jeu 23/10 22:00</td><td>Ven 24/10 07:55</td><td>Twingo</td><td>40→100</td><td>15,6</td><td>6 h 55</td><td><b>2,13 €</b></td></tr>
+        <tr style="border-top:1px solid #eee"><td style="padding:6px">Mar 21/10 22:00</td><td>Mer 22/10 07:55</td><td>Twingo</td><td>38→100</td><td>15,6</td><td>6 h 56</td><td>2,59 € *</td></tr>
+        <tr style="border-top:1px solid #eee"><td style="padding:6px">Dim 19/10 19:45</td><td>Lun 20/10 08:07</td><td>Twingo</td><td>55→100</td><td>12,1</td><td>5 h 30</td><td>2,00 € *</td></tr>
+        <tr style="border-top:1px solid #eee"><td style="padding:6px">Ven 17/10 14:46</td><td>Ven 17/10 15:42</td><td>Twingo</td><td>—</td><td>2,0</td><td>0 h 55</td><td>0,33 € *</td></tr>
+      </table>
+      <div style="color:#888;margin-top:6px">* estimée · « — » : niveau de batterie inconnu (mode dégradé)</div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Session du jeudi 23/10 · Twingo · Chargeur garage</div>
+    <div class="mockup-body" style="font-size:13px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:10px">
+        <div><b style="font-size:16px">15,6 kWh</b><br><span style="color:#888">énergie</span></div>
+        <div><b style="font-size:16px">2,13 €</b><br><span style="color:#888">coût</span></div>
+        <div><b style="font-size:16px">40→100 %</b><br><span style="color:#888">batterie</span></div>
+        <div><b style="font-size:16px">2,2 kW</b><br><span style="color:#888">moyenne</span></div>
+      </div>
+      <div class="label">Puissance et tarif au fil de la nuit</div>
+      <div style="position:relative;height:80px;border-bottom:1px solid #ccc;margin:6px 0 14px;display:flex;align-items:flex-end;gap:2px">
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,#dbeafe 0 85%,#fde68a 85% 100%);opacity:.6"></div>
+        <div style="position:relative;width:8%;height:70%;background:#3b82f6"></div><div style="position:relative;width:8%;height:72%;background:#3b82f6"></div><div style="position:relative;width:8%;height:72%;background:#3b82f6"></div><div style="position:relative;width:8%;height:71%;background:#3b82f6"></div><div style="position:relative;width:8%;height:72%;background:#3b82f6"></div><div style="position:relative;width:8%;height:70%;background:#3b82f6"></div><div style="position:relative;width:8%;height:50%;background:#3b82f6"></div><div style="position:relative;width:8%;height:0%"></div><div style="position:relative;width:8%;height:0%"></div><div style="position:relative;width:8%;height:40%;background:#f59e0b"></div>
+      </div>
+      <div style="color:#888;margin-bottom:10px">22:00 ············ 04:56 plein ········ 07:43 complément</div>
+      <table style="width:100%;font-size:12px">
+        <tr><td>Branchée</td><td>21:48</td><td>Heures creuses</td><td>15,2 kWh · 2,06 €</td></tr>
+        <tr><td>Charge</td><td>22:00 → 07:55</td><td>Heures pleines</td><td>0,43 kWh · 0,07 €</td></tr>
+        <tr><td>Débranchée</td><td>07:58</td><td>Temps de charge</td><td>6 h 55 / 10 h 10 branchée</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
