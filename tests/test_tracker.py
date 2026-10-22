@@ -19,12 +19,12 @@ def make_tracker(priced=True):
     return SessionTracker("tuya", settings, lambda: f"s{next(ids)}")
 
 
-def run(tracker, start, end, make):
+def run(tracker, start, end, make, vehicle="twingo"):
     """Feed one sample every 30 s from start to end (inclusive); return finished sessions."""
     done = []
     t = start
     while t <= end:
-        s = tracker.feed(make(t), "twingo")
+        s = tracker.feed(make(t), vehicle)
         if s is not None:
             done.append(s)
         t += 30
@@ -70,12 +70,34 @@ def test_energy_counter_reset_is_not_lost():
             e = min(max(t - at(1), 0) / 3600 * 2.5, 5.0)
         else:
             e = min(max(t - at(4), 0) / 3600 * 2.0, 2.0)
-        charging = at(1) <= t < at(3) or at(4) <= t < at(5)
-        return Sample(t, 2000 if charging else 0, e, t < at(5, 30), 0.2, False, None)
+        p = 2500 if at(1) <= t < at(3) else 2000 if at(4) <= t < at(5) else 0
+        return Sample(t, p, e, t < at(5, 30), 0.2, False, None)
 
     done = run(make_tracker(), at(0), at(6), make)
     assert len(done) == 1
     assert done[0].energy_kwh == pytest.approx(7.0)
+
+
+def test_counter_dropout_to_zero_is_not_phantom_energy():
+    def make(t):
+        e = 0.0 if t == at(2) else 2.8 + max(t - at(1), 0) / 3600 * 2.2
+        return Sample(
+            t, 2200 if at(1) <= t < at(3) else 0, min(e, 7.2), t < at(4), 0.2, False, None
+        )
+
+    done = run(make_tracker(), at(0), at(5), make)
+    assert len(done) == 1
+    assert done[0].energy_kwh == pytest.approx(4.4, abs=0.05)
+
+
+def test_counter_jitter_down_adds_nothing():
+    def make(t):
+        e = 4.999 if t >= at(2, 30) else 2.8 + min(max(t - at(1), 0), 3600) / 3600 * 2.2
+        return Sample(t, 2200 if at(1) <= t < at(2) else 0, e, t < at(3), 0.2, False, None)
+
+    done = run(make_tracker(), at(0), at(4), make)
+    assert len(done) == 1
+    assert done[0].energy_kwh == pytest.approx(2.2, abs=0.01)
 
 
 def test_unavailable_power_adds_nothing():
@@ -153,6 +175,24 @@ def test_no_soc_stays_none():
     done = run(make_tracker(), at(0), at(4), make)
     assert len(done) == 1
     assert done[0].soc_start is None and done[0].soc_end is None
+
+
+def test_soc_does_not_leak_into_next_session():
+    tracker = make_tracker()
+
+    def car_a(t):
+        return Sample(t, 2200 if at(1) <= t < at(2) else 0, None, t < at(3), 0.2, False, 80)
+
+    def car_b(t):
+        return Sample(
+            t, 2200 if at(5) <= t < at(6) else 0, None, at(4) <= t < at(7), 0.2, False, None
+        )
+
+    a = run(tracker, at(0), at(3, 30), car_a, vehicle="twingo")
+    b = run(tracker, at(3, 30) + 30, at(8), car_b, vehicle="zoe")
+    assert a[0].soc_start == 80 and a[0].soc_end == 80
+    assert b[0].vehicle_id == "zoe"
+    assert b[0].soc_start is None and b[0].soc_end is None
 
 
 def test_empty_plug_session_is_dropped():

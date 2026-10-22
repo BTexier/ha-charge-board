@@ -31,13 +31,24 @@ class TrackerSettings:
 
 
 def _interval_kwh(a: Sample, b: Sample) -> float:
-    """Energy counter delta (a reset counts from 0), else power trapezoid, else 0."""
-    if a.energy_kwh is not None and b.energy_kwh is not None:
-        delta = b.energy_kwh - a.energy_kwh
-        return b.energy_kwh if delta < 0 else delta
-    if a.power_w is not None and b.power_w is not None:
-        return (a.power_w + b.power_w) / 2 * (b.t - a.t) / 3_600_000
-    return 0.0
+    """Energy of the interval: counter delta if plausible, else power trapezoid, else 0.
+
+    Counter decrease: a reset (delta = e1) only if e1 <= 0.5 x e0, otherwise jitter (0).
+    Counter increase above max(known power) x dt x 1.5 + 0.01 kWh is a glitch: fall back
+    to the power trapezoid.
+    """
+    dt = b.t - a.t
+    known = [p for p in (a.power_w, b.power_w) if p is not None]
+    trapezoid = sum(known) / 2 * dt / 3_600_000 if len(known) == 2 else 0.0
+    if a.energy_kwh is None or b.energy_kwh is None:
+        return trapezoid
+    e0, e1 = a.energy_kwh, b.energy_kwh
+    if e1 < e0:
+        delta = e1 if e1 <= 0.5 * e0 else 0.0
+    else:
+        delta = e1 - e0
+    plausible = max(known, default=0.0) * dt * 1.5 / 3_600_000 + 0.01
+    return delta if delta <= plausible else trapezoid
 
 
 def _add(slice_: TariffSlice, kwh: float, cost: float | None) -> None:
@@ -68,7 +79,7 @@ class SessionTracker:
         self._plugged: bool | None = None  # last known plug state
         self._plugged_at: float | None = None  # last False -> True transition
         self._price: float | None = None  # last known price
-        self._soc: float | None = None  # last known battery level
+        self._soc: float | None = None  # battery level since last plug-in / session close
 
     @property
     def current(self) -> Session | None:
@@ -146,6 +157,7 @@ class SessionTracker:
         ):
             return None
         self._session = None
+        self._soc = None  # never carry a level over to the next session (or vehicle)
         sess.open = False
         sess.curve = [p for p in sess.curve if p.t < sess.charge_end]
         return sess if sess.energy_kwh >= MIN_SESSION_KWH else None
@@ -159,7 +171,9 @@ class SessionTracker:
             self._plugged = sample.plugged
         if sample.price is not None:
             self._price = sample.price
-        if sample.soc is not None:
+        if self._plugged is False:
+            self._soc = None  # unplugged: the next car's level is unknown until it reports
+        elif sample.soc is not None:
             self._soc = sample.soc
             if self._session is not None:
                 self._session.soc_end = sample.soc
