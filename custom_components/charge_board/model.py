@@ -46,13 +46,20 @@ class Session:
 
     @classmethod
     def from_dict(cls, d: dict) -> Session:
-        known = {f.name for f in fields(cls)}
-        d = {k: v for k, v in d.items() if k in known}
+        d = _known(cls, d)
         for k in ("off_peak", "peak"):
             if k in d:
-                d[k] = TariffSlice(**d[k])
+                d[k] = TariffSlice(**_known(TariffSlice, d[k]))
         if "by_price" in d:
-            d["by_price"] = {k: TariffSlice(**v) for k, v in d["by_price"].items()}
+            d["by_price"] = {
+                k: TariffSlice(**_known(TariffSlice, v)) for k, v in d["by_price"].items()
+            }
         if "curve" in d:
-            d["curve"] = [CurvePoint(**p) for p in d["curve"]]
+            d["curve"] = [CurvePoint(**_known(CurvePoint, p)) for p in d["curve"]]
         return cls(**d)
+
+
+def _known(cls: type, d: dict) -> dict:
+    """Drop keys the dataclass does not know (saved by a newer version)."""
+    names = {f.name for f in fields(cls)}
+    return {k: v for k, v in d.items() if k in names}
