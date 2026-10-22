@@ -1,0 +1,13 @@
+{
+  "domain": "charge_board",
+  "name": "Charge Board",
+  "version": "0.1.0",
+  "config_flow": true,
+  "single_config_entry": true,
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "dependencies": ["http", "frontend", "panel_custom", "websocket_api"],
+  "codeowners": ["@BTexier"],
+  "documentation": "https://github.com/BTexier/ha-charge-board",
+  "issue_tracker": "https://github.com/BTexier/ha-charge-board/issues"
+}
