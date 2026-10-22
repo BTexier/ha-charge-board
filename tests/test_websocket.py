@@ -36,8 +36,8 @@ def sess(sid, start, kwh=5.0, cost=1.0, source=True, vehicle_id=None, cid="c"):
         charging_s=3600,
         energy_kwh=kwh,
         cost=cost,
-        off_peak=TariffSlice(kwh / 2, cost / 2),
-        peak=TariffSlice(kwh / 2, cost / 2),
+        off_peak=TariffSlice(kwh / 2, None if cost is None else cost / 2),
+        peak=TariffSlice(kwh / 2, None if cost is None else cost / 2),
         has_off_peak_source=source,
     )
 
