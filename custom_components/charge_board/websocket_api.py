@@ -152,6 +152,7 @@ async def sessions(hub: Hub, msg: dict) -> dict:
             "count": len(found),
             "energy_kwh": sum(s.energy_kwh for s in found),
             "cost": sum(costs) if costs else None,
+            "unpriced_count": len(found) - len(costs),
             "off_peak_share": sum(s.off_peak.kwh for s in sourced) / total if total else None,
         },
     }

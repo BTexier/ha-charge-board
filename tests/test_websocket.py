@@ -180,3 +180,15 @@ async def test_subscribe_events(hass, env):
     assert (await ws.receive_json())["success"]
     await put(hub, sess("a", ts(2026, 10, 1), cid=cid))
     assert (await ws.receive_json())["event"] == {"event": "updated"}
+
+
+async def test_summary_unpriced_count(env):
+    hub, cid, _, ws = env
+    await put(hub, sess("a", ts(2026, 10, 1), cost=2.0, cid=cid))
+    await ws.send_json_auto_id({"type": "charge_board/sessions"})
+    summary = (await ws.receive_json())["result"]["summary"]
+    assert (summary["cost"], summary["unpriced_count"]) == (2.0, 0)
+    await put(hub, sess("b", ts(2026, 10, 2), cost=None, cid=cid))
+    await ws.send_json_auto_id({"type": "charge_board/sessions"})
+    summary = (await ws.receive_json())["result"]["summary"]
+    assert (summary["cost"], summary["unpriced_count"]) == (2.0, 1)
