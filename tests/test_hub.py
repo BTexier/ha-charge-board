@@ -124,3 +124,28 @@ async def test_restored_vehicle_is_used_after_reload(hass, restore_zoe, setup, f
     assert session["vehicle_id"] == zoe
     assert session["soc_start"] == 70
     assert session["soc_end"] == 70
+
+
+async def test_switching_vehicle_forgets_previous_soc(hass, setup, freezer):
+    entry, cid = setup
+    # Close the near-empty session opened at setup (dropped, < 0.01 kWh), then replug.
+    for entity_id, state in (
+        ("sensor.p", "0"),
+        ("binary_sensor.plug", "off"),
+        ("binary_sensor.plug", "on"),
+    ):
+        freezer.tick(1)
+        hass.states.async_set(entity_id, state, {"unit_of_measurement": "W"})
+        await hass.async_block_till_done()
+    await _run(hass, freezer, 60)  # plugged, Twingo selected: its 40 % is remembered
+    hub = entry.runtime_data
+    no_soc = next(vid for vid, v in hub.vehicles.items() if v["name"] == "Zoe")
+    hub.vehicles[no_soc].pop("soc_entity")  # Zoe without battery level
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": "select.de_vehicule", "option": "Zoe"}, True
+    )
+    hass.states.async_set("sensor.p", "2200", {"unit_of_measurement": "W"})
+    await _run(hass, freezer, 60)
+    session = hub.live(cid)["session"]
+    assert session["vehicle_id"] == no_soc
+    assert session["soc_start"] is None

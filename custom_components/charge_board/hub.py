@@ -148,6 +148,9 @@ class Hub:
 
     @callback
     def select_vehicle(self, charger_id: str, vehicle_id: str | None) -> None:
+        """User choice: the remembered level belonged to the previous vehicle, forget it."""
+        if vehicle_id != self.selected.get(charger_id):
+            self.trackers[charger_id].reset_soc()
         self.selected[charger_id] = vehicle_id
         async_dispatcher_send(self.hass, SIGNAL_LIVE.format(charger_id))
 

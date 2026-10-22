@@ -252,3 +252,22 @@ def test_restart_gap_ignores_plausibility_check():
     t = _restore(_open_session())
     t.feed(Sample(at(4, 30), 0, 9.0, True, 0.2, False, None), "twingo")
     assert t.current.energy_kwh == pytest.approx(9.0)
+
+
+def test_reset_soc_forgets_the_previous_vehicle_level():
+    tracker = make_tracker()
+    tracker.feed(Sample(at(1), 0, None, True, 0.2, False, 40), "twingo")
+    tracker.reset_soc()  # another vehicle selected, which has no level
+    tracker.feed(Sample(at(1, 1), 2200, None, True, 0.2, False, None), "zoe")
+    tracker.feed(Sample(at(1, 1) + 30, 2200, None, True, 0.2, False, None), "zoe")
+    assert tracker.current.soc_start is None
+    assert tracker.current.soc_end is None
+
+
+def test_reset_soc_keeps_an_open_session():
+    tracker = make_tracker()
+    tracker.feed(Sample(at(1), 2200, None, True, 0.2, False, 40), "twingo")
+    tracker.feed(Sample(at(1) + 30, 2200, None, True, 0.2, False, 40), "twingo")
+    tracker.reset_soc()
+    assert tracker.current.soc_start == 40
+    assert tracker.current.vehicle_id == "twingo"

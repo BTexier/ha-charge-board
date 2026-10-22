@@ -89,6 +89,13 @@ class SessionTracker:
     def current(self) -> Session | None:
         return self._session
 
+    def reset_soc(self) -> None:
+        """Another vehicle was selected: forget the remembered level (never use another car's).
+
+        An open session keeps its soc_start and vehicle_id (fixed at its start).
+        """
+        self._soc = None
+
     def feed(self, sample: Sample, vehicle_id: str | None) -> Session | None:
         """Process one sample; return the session it finishes (if kept), else None."""
         prev = self._last

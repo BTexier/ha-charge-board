@@ -41,7 +41,8 @@ class VehicleSelect(ChargerEntity, SelectEntity, RestoreEntity):
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is not None and last.state in self._ids:
-            self.hub.select_vehicle(self.charger_id, self._ids[last.state])
+            # Restoring, not a change: keep the tracker's level (it is this vehicle's).
+            self.hub.selected[self.charger_id] = self._ids[last.state]
 
     async def async_select_option(self, option: str) -> None:
         self.hub.select_vehicle(self.charger_id, self._ids[option])
