@@ -2,12 +2,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from . import websocket_api
 from .hub import Hub
 
 PLATFORMS = [Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    websocket_api.async_register(hass)
     hub = Hub(hass, entry)
     await hub.async_start()
     entry.runtime_data = hub
