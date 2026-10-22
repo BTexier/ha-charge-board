@@ -2,6 +2,7 @@ import { LitElement, css, html, type PropertyValues } from "lit";
 import { subscribeUpdates, type HomeAssistant } from "./api";
 import { langOf, t, type Key } from "./i18n";
 import "./overview";
+import "./sessions";
 
 const MENU_ICON =
   "M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"; // mdi:menu
@@ -45,9 +46,13 @@ class ChargeBoardPanel extends LitElement {
 
   private _subscribe() {
     if (!this.hass || this._unsub) return;
-    this._unsub = subscribeUpdates(this.hass, () => this._version++);
-    // Not loaded: the tabs show the error from their own fetch; no retry loop.
-    this._unsub.catch(() => undefined);
+    const sub = subscribeUpdates(this.hass, () => this._version++);
+    this._unsub = sub;
+    // Subscribed late (e.g. after not_loaded): the tabs re-fetch.
+    sub.then(() => this._version++).catch(() => {
+      // Rejected (not_loaded at startup): retry on the next hass update, not in a loop.
+      if (this._unsub === sub) this._unsub = undefined;
+    });
   }
 
   private _t(key: Key) {
@@ -86,7 +91,7 @@ class ChargeBoardPanel extends LitElement {
       <main>
         ${this._tab === "overview"
           ? html`<charge-board-overview .hass=${this.hass} .version=${this._version}></charge-board-overview>`
-          : html`<p class="placeholder">${this._t("sessions_soon")}</p>`}
+          : html`<charge-board-sessions .hass=${this.hass} .version=${this._version}></charge-board-sessions>`}
       </main>
     `;
   }
@@ -158,10 +163,6 @@ class ChargeBoardPanel extends LitElement {
     nav button[aria-selected="true"] {
       opacity: 1;
       border-bottom-color: currentColor;
-    }
-    .placeholder {
-      text-align: center;
-      color: var(--secondary-text-color);
     }
   `;
 }

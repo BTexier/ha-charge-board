@@ -71,7 +71,7 @@ def _curve_split(s: Session, at: float) -> tuple[list[CurvePoint], list[CurvePoi
             e_right += p.w * (end - p.t) / 3.6e6
         else:  # straddles the cut: split proportionally
             left.append(replace(p))
-            right.append(CurvePoint(at, p.w))
+            right.append(replace(p, t=at))
             e_left += p.w * (at - p.t) / 3.6e6
             e_right += p.w * (end - at) / 3.6e6
     return left, right, e_left, e_right

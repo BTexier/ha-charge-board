@@ -70,7 +70,7 @@ def test_split_conserves_energy_and_cost():
         1.0,
         curve=[
             CurvePoint(0, 3000),
-            CurvePoint(1000, 3000),
+            CurvePoint(1000, 3000, True),
             CurvePoint(2000, 6000),
             CurvePoint(3000, 3000),
         ],
@@ -91,6 +91,7 @@ def test_split_conserves_energy_and_cost():
     assert a.soc_start == 20 and b.soc_end == 50
     assert [p.t for p in a.curve] == [0, 1000]
     assert [p.t for p in b.curve] == [1500, 2000, 3000]
+    assert b.curve[0].off_peak is True  # the cut window keeps its tariff
 
 
 def test_split_outside_bounds_raises():

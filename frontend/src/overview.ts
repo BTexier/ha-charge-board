@@ -11,7 +11,7 @@ import {
   formatTime,
   formatWhen,
 } from "./format";
-import { langOf, localeOf, t, type Key } from "./i18n";
+import { errorKey, langOf, localeOf, t, type Key } from "./i18n";
 
 const STATE_COLOR = {
   charging: "var(--success-color, #43a047)",
@@ -40,12 +40,17 @@ export class ChargeBoardOverview extends LitElement {
     if (changed.has("_open") && this._open) this.renderRoot.querySelector("dialog")?.showModal();
   }
 
+  private _req = 0;
+
   private async _fetch() {
+    const req = ++this._req; // a slow response must not overwrite a newer one
     try {
-      this._data = await getOverview(this.hass);
+      const data = await getOverview(this.hass);
+      if (req !== this._req) return;
+      this._data = data;
       this._error = undefined;
     } catch (err) {
-      this._error = (err as { code?: string }).code === "not_loaded" ? "not_loaded" : "error";
+      if (req === this._req) this._error = errorKey(err);
     }
   }
 

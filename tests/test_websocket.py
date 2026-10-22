@@ -157,6 +157,7 @@ async def test_overview_estimated_end_only_when_known(hass, env, freezer):
     r = (await ws.receive_json())["result"]
     c = r["chargers"][0]
     assert (r["style"], r["currency"]) == ("detailed", hass.config.currency)
+    assert r["vehicles"] == [{"id": vid, "name": "Twingo"}]
     assert c["state"] == "free" and c["estimated_end"] is None and c["last_session"]["id"] == "a"
     assert c["vehicle"] == {
         "id": vid,

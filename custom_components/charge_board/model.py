@@ -15,6 +15,7 @@ class TariffSlice:
 class CurvePoint:
     t: float  # Unix seconds, start of the averaging window
     w: float  # mean power over the window
+    off_peak: bool | None = None  # tariff at the window start; None = unknown
 
 
 @dataclass

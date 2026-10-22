@@ -125,6 +125,7 @@ async def overview(hub: Hub, msg: dict) -> dict:
         "style": hub.options.get("overview_style", "detailed"),
         "currency": hub.hass.config.currency,
         "chargers": chargers,
+        "vehicles": [{"id": vid, "name": v["name"]} for vid, v in hub.vehicles.items()],
     }
 
 

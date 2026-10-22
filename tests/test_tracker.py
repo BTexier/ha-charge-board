@@ -62,6 +62,8 @@ def test_night_with_top_up_is_one_session():
     assert s.charging_s == pytest.approx((416 + 12) * 60)
     assert s.curve and all(at(22) <= p.t < s.charge_end for p in s.curve)
     assert s.curve[0].w == pytest.approx(2200)
+    # Each curve point carries the off-peak flag of its window (panel background bands).
+    assert s.curve[0].off_peak is True and s.curve[-1].off_peak is False
 
 
 def test_energy_counter_reset_is_not_lost():

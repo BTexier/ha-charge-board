@@ -143,7 +143,7 @@ class SessionTracker:
         # Curve: a point per window of >= curve_step_s, starting at a sample time. Intervals
         # of an open session are contiguous, so the window's elapsed time is a.t - p.t.
         if not sess.curve or a.t >= sess.curve[-1].t + s.curve_step_s:
-            sess.curve.append(CurvePoint(a.t, 0.0))
+            sess.curve.append(CurvePoint(a.t, 0.0, a.off_peak))
         p = sess.curve[-1]
         p.w = (p.w * (a.t - p.t) + kwh * 3_600_000) / (b.t - p.t)
 

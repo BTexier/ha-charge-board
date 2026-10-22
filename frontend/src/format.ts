@@ -60,3 +60,14 @@ export function formatWhen(ts: number, locale: string, timeZone: string, now = D
   const day = formatDay(ts, locale, timeZone);
   return day === formatDay(now, locale, timeZone) ? time : `${day} ${time}`;
 }
+
+/** "mar. 21/10 22:30": weekday, day and time in Home Assistant's time zone. */
+export function formatDayTime(ts: number, locale: string, timeZone: string): string {
+  const weekday = parts(ts, locale, timeZone, { weekday: "short" });
+  return `${weekday} ${formatDay(ts, locale, timeZone)} ${formatTime(ts, locale, timeZone)}`;
+}
+
+/** "2026-10": the month of a Unix timestamp in Home Assistant's time zone (sessions filter). */
+export function monthOf(ts: number, timeZone: string): string {
+  return parts(ts, "en-CA", timeZone, { year: "numeric", month: "2-digit" });
+}

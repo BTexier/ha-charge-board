@@ -8,6 +8,8 @@ import {
   formatSoc,
   formatTime,
   formatWhen,
+  formatDayTime,
+  monthOf,
 } from "../src/format";
 
 describe("format", () => {
@@ -37,5 +39,16 @@ describe("more format", () => {
     expect(formatWhen(1761078600, "fr", "Europe/Paris", 1761078600 + 86400)).toBe("21/10 22:30");
     expect(formatPercent(0.972, "fr")).toBe("97 %");
     expect(formatSoc(62, null)).toBe("62 → — %");
+  });
+});
+
+describe("months and dates", () => {
+  it("gives the current month in Home Assistant's time zone", () => {
+    const t = Date.UTC(2026, 9, 31, 23, 30) / 1000; // 1 Nov 00:30 in Paris
+    expect(monthOf(t, "Europe/Paris")).toBe("2026-11");
+    expect(monthOf(t, "UTC")).toBe("2026-10");
+  });
+  it("formats a day with its weekday and time", () => {
+    expect(formatDayTime(1761078600, "fr", "Europe/Paris")).toBe("mar. 21/10 22:30");
   });
 });

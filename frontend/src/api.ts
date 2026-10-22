@@ -35,7 +35,7 @@ export interface Session {
   has_off_peak_source: boolean;
   soc_start: number | null;
   soc_end: number | null;
-  curve: { t: number; w: number }[];
+  curve: { t: number; w: number; off_peak?: boolean | null }[];
   estimated: boolean;
   edited: boolean;
   open: boolean;
@@ -67,6 +67,7 @@ export interface Overview {
   style: "detailed" | "compact";
   currency: string;
   chargers: ChargerOverview[];
+  vehicles: { id: string; name: string }[];
 }
 
 export interface SessionsSummary {
