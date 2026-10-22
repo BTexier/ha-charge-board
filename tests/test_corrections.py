@@ -121,3 +121,39 @@ def test_split_merged_session_ignores_the_gap():
 
     assert left_energy(10_000) == pytest.approx(left_energy(100_000))
     assert left_energy(10_000) == pytest.approx((0.6, 0.6))
+
+
+def test_split_gives_each_side_its_own_tariff_slices():
+    """Night off-peak 22:00-02:00 at 3 kW, pause, peak reprise 07:00-07:30; cut at 05:00."""
+    h = 3600
+    curve = [  # 300 s windows as the tracker records them, pause included (w = 0)
+        CurvePoint(t, 3000 if t < 4 * h or t >= 9 * h else 0, t < 8 * h)
+        for t in range(0, int(9.5 * h), 300)
+    ]
+    s = Session(
+        id="a",
+        charger_id="c1",
+        charge_start=0,
+        charge_end=9.5 * h,
+        charging_s=4.5 * h,
+        energy_kwh=13.5,
+        cost=12 * 0.13 + 1.5 * 0.16,
+        off_peak=TariffSlice(12.0, 12 * 0.13),
+        peak=TariffSlice(1.5, 1.5 * 0.16),
+        by_price={"0.1600": TariffSlice(1.5, 0.24), "0.1300": TariffSlice(12.0, 1.56)},
+        has_off_peak_source=True,
+        curve=curve,
+    )
+    a, b = split_session(s, 7 * h, "n")
+    assert a.energy_kwh == pytest.approx(12.0) and b.energy_kwh == pytest.approx(1.5)
+    assert (a.off_peak.kwh, a.off_peak.cost) == pytest.approx((12.0, 1.56))
+    assert (b.peak.kwh, b.peak.cost) == pytest.approx((1.5, 0.24))
+    assert a.peak.kwh == pytest.approx(0) and b.off_peak.kwh == pytest.approx(0)
+    assert a.cost == pytest.approx(1.56) and b.cost == pytest.approx(0.24)
+    assert a.by_price["0.1300"].kwh == pytest.approx(12.0)
+    assert a.by_price["0.1600"].kwh == pytest.approx(0)
+    assert b.by_price["0.1600"].cost == pytest.approx(0.24)
+    assert b.by_price["0.1300"].kwh == pytest.approx(0)
+    for k in s.by_price:
+        assert a.by_price[k].kwh + b.by_price[k].kwh == pytest.approx(s.by_price[k].kwh)
+    assert a.cost + b.cost == pytest.approx(s.cost)

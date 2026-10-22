@@ -56,54 +56,90 @@ def merge_sessions(a: Session, b: Session) -> Session:
     )
 
 
-def _curve_split(s: Session, at: float) -> tuple[list[CurvePoint], list[CurvePoint], float, float]:
-    """Cut the curve at `at`; return both halves and their energy (kWh)."""
+def _curve_split(
+    s: Session, at: float
+) -> tuple[list[CurvePoint], list[CurvePoint], dict[bool | None, list[float]]]:
+    """Cut the curve at `at`; return both halves and their energy (kWh) per off-peak flag:
+    {flag: [left, right]}."""
     left: list[CurvePoint] = []
     right: list[CurvePoint] = []
-    e_left = e_right = 0.0
+    energy: dict[bool | None, list[float]] = {True: [0.0, 0.0], False: [0.0, 0.0], None: [0.0, 0.0]}
     for i, p in enumerate(s.curve):
         end = s.curve[i + 1].t if i + 1 < len(s.curve) else (s.charge_end or p.t)
         end = max(min(end, p.t + CURVE_WINDOW_MAX_S), p.t)
+        e = energy[p.off_peak]
         if end <= at:
             left.append(replace(p))
-            e_left += p.w * (end - p.t) / 3.6e6
+            e[0] += p.w * (end - p.t) / 3.6e6
         elif p.t >= at:
             right.append(replace(p))
-            e_right += p.w * (end - p.t) / 3.6e6
+            e[1] += p.w * (end - p.t) / 3.6e6
         else:  # straddles the cut: split proportionally
             left.append(replace(p))
             right.append(replace(p, t=at))
-            e_left += p.w * (at - p.t) / 3.6e6
-            e_right += p.w * (end - at) / 3.6e6
-    return left, right, e_left, e_right
+            e[0] += p.w * (at - p.t) / 3.6e6
+            e[1] += p.w * (end - at) / 3.6e6
+    return left, right, energy
+
+
+def _price_shares(s: Session, f_off: float, f_peak: float, r: float) -> dict[str, float]:
+    """Left share of each by_price entry. Prices are not stored per curve point, so each entry
+    is attributed to the tariff slices assuming the cheapest prices filled the off-peak slice
+    first (true for HC/HP and Tempo), then split like those slices."""
+    room = s.off_peak.kwh
+    shares = {}
+    for k in sorted(s.by_price, key=lambda k: float("inf") if k == "none" else float(k)):
+        kwh = s.by_price[k].kwh
+        off = min(kwh, max(room, 0.0))
+        room -= off
+        shares[k] = (off * f_off + (kwh - off) * f_peak) / kwh if kwh > 0 else r
+    return shares
 
 
 def split_session(s: Session, at: float, new_id: str) -> tuple[Session, Session]:
+    """Energy and duration split along the curve; each tariff slice along the curve points of
+    that slice (points of unknown tariff count with the session's global off-peak share), its
+    cost at the slice's average price."""
     if s.open:
         raise ValueError("cannot split an open session")
     if s.charge_start is None or s.charge_end is None or not s.charge_start < at < s.charge_end:
         raise ValueError("split point outside the charge window")
-    left, right, e_left, e_right = _curve_split(s, at)
-    total = e_left + e_right
+    left, right, energy = _curve_split(s, at)
+    e_left = sum(e[0] for e in energy.values())
+    total = e_left + sum(e[1] for e in energy.values())
     if total > 0:
         r = e_left / total
     else:
         r = (at - s.charge_start) / (s.charge_end - s.charge_start)
+    sliced = s.off_peak.kwh + s.peak.kwh
+    g = s.off_peak.kwh / sliced if sliced else 0.0
 
-    def part(ratio: float, **kw) -> dict:
+    def left_share(flag: bool, weight: float) -> float:
+        side = [energy[flag][i] + energy[None][i] * weight for i in (0, 1)]
+        return side[0] / sum(side) if sum(side) > 0 else r
+
+    f_off, f_peak = left_share(True, g), left_share(False, 1 - g)
+    shares = _price_shares(s, f_off, f_peak, r)
+
+    def part(left_side: bool, **kw) -> dict:
+        def f(x: float) -> float:
+            return x if left_side else 1 - x
+
+        off, peak = _slice_scale(s.off_peak, f(f_off)), _slice_scale(s.peak, f(f_peak))
+        cost = None if s.cost is None else (off.cost or 0.0) + (peak.cost or 0.0)
         return dict(
-            charging_s=s.charging_s * ratio,
-            energy_kwh=s.energy_kwh * ratio,
-            cost=_scale(s.cost, ratio),
-            off_peak=_slice_scale(s.off_peak, ratio),
-            peak=_slice_scale(s.peak, ratio),
-            by_price={k: _slice_scale(v, ratio) for k, v in s.by_price.items()},
+            charging_s=s.charging_s * f(r),
+            energy_kwh=s.energy_kwh * f(r),
+            cost=cost,
+            off_peak=off,
+            peak=peak,
+            by_price={k: _slice_scale(v, f(shares[k])) for k, v in s.by_price.items()},
             edited=True,
             **kw,
         )
 
-    a = replace(s, **part(r, charge_end=at, unplugged_at=None, soc_end=None, curve=left))
+    a = replace(s, **part(True, charge_end=at, unplugged_at=None, soc_end=None, curve=left))
     b = replace(
-        s, **part(1 - r, id=new_id, charge_start=at, plugged_at=None, soc_start=None, curve=right)
+        s, **part(False, id=new_id, charge_start=at, plugged_at=None, soc_start=None, curve=right)
     )
     return a, b
