@@ -129,6 +129,9 @@ class TariffOptionsFlow(OptionsFlow):
             if name.startswith("mobile_app_")
         )
         current = {"notifications": NOTIFICATIONS, **self.config_entry.options}
+        # A phone removed from Home Assistant stays selectable, or the form could not be saved.
+        if (saved := current.get("notify_service")) and saved not in phones:
+            phones.append(saved)
         schema = self.add_suggested_values_to_schema(_options_schema(phones), user_input or current)
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
 

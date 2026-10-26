@@ -463,3 +463,15 @@ def test_dropped_empty_session_emits_no_unplugged():
     # Counter stuck at 0: the session is dropped (< 0.01 kWh), but 6 min of charging => started.
     ev = events(make_tracker(), at(18, 50), at(19, 40), make)
     assert [k for k, _ in ev] == ["plugged", "started"]
+
+
+def test_unplug_while_charging_with_stale_power_is_not_a_new_start():
+    # The plug status turns off before the power sensor refreshes (about once a minute).
+    def make(t):
+        unplug = at(20)
+        return Sample(
+            t=t, power_w=2200 if at(19) <= t < unplug + 60 else 0, plugged=at(18, 59) <= t < unplug
+        )
+
+    ev = events(make_tracker(), at(18, 50), at(20, 30), make)
+    assert [k for k, _ in ev] == ["plugged", "started", "unplugged"]

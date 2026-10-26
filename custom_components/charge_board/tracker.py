@@ -231,6 +231,7 @@ class SessionTracker:
             return None
         self._session = None
         self._start_announced = False
+        self._run_start = None  # a stale power reading after unplug starts a new run
         self._soc = None  # never carry a level over to the next session (or vehicle)
         sess.open = False
         sess.curve = [p for p in sess.curve if p.t < sess.charge_end]

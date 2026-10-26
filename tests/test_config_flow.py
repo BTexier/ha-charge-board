@@ -126,3 +126,14 @@ async def test_options_flow_lists_phones_and_stores_notifications(hass):
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options["notify_service"] == "mobile_app_iphone"
     assert entry.options["notifications"] == ["unplugged"]
+
+
+async def test_options_flow_keeps_a_phone_that_left_home_assistant(hass):
+    entry = MockConfigEntry(domain="charge_board", options={"notify_service": "mobile_app_old"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"notify_service": "mobile_app_old", "peak_price": 0.2}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
