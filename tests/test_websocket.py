@@ -199,7 +199,7 @@ async def test_stats_command_returns_twelve_months(env, monkeypatch):
     hub, _cid, vid, ws = env
 
     async def km(vehicle_id, months):
-        return {"2026-10": 300.0}, {"2026-10"}
+        return {"2026-10": 300.0}, set()
 
     monkeypatch.setattr(hub, "async_km_by_month", km)
     await put(hub, sess("a", ts(2026, 10, 10, 22), kwh=10, cost=1.4, vehicle_id=vid))
@@ -209,7 +209,7 @@ async def test_stats_command_returns_twelve_months(env, monkeypatch):
     october = res["rows"][9]
     assert october["month"] == "2026-10"
     assert october["km"] == 300.0
-    assert october["km_partial"] is True
+    assert october["km_partial"] is False
     assert october["cost_per_100km"] == pytest.approx(1.4 / 300 * 100)
     assert res["total"]["sessions"] == 1
     assert res["currency"] == "EUR"
@@ -232,7 +232,11 @@ async def test_vehicle_command_shapes_config_and_flags_ignored_cut(env, monkeypa
 
     monkeypatch.setattr(hub, "async_km_between", km)
     now = dt_util.utcnow().timestamp()
-    await put(hub, sess("a", now - 86400, kwh=13, cost=1.8, vehicle_id=vid))
+    await put(
+        hub,
+        sess("first", now - 40 * 86400, kwh=5, vehicle_id=vid),
+        sess("a", now - 86400, kwh=13, cost=1.8, vehicle_id=vid),
+    )
     await ws.send_json({"id": 1, "type": "charge_board/vehicle", "vehicle_id": vid})
     res = (await ws.receive_json())["result"]
     assert res["name"] == "Twingo"
@@ -292,3 +296,30 @@ async def test_vehicle_consumption_only_counts_energy_since_the_odometer_is_trac
     await ws.send_json({"id": 1, "type": "charge_board/vehicle", "vehicle_id": vid})
     res = (await ws.receive_json())["result"]
     assert res["consumption_30d"] == pytest.approx(13.0)
+
+
+async def test_partial_month_pairs_km_with_the_charges_after_the_first(env, monkeypatch):
+    hub, _cid, vid, ws = env
+    first, second = ts(2026, 10, 16, 18), ts(2026, 10, 20, 22)
+    calls = []
+
+    async def km_by_month(vehicle_id, months):
+        return {"2026-10": 568.0}, {"2026-10"}  # since 13 Oct, before the first charge
+
+    async def km_between(vehicle_id, start, end):
+        calls.append(start)
+        return 443.0, start
+
+    monkeypatch.setattr(hub, "async_km_by_month", km_by_month)
+    monkeypatch.setattr(hub, "async_km_between", km_between)
+    await put(
+        hub,
+        sess("a", first, kwh=0.7, cost=0.12, vehicle_id=vid),
+        sess("b", second, kwh=72.3, cost=10.04, vehicle_id=vid),
+    )
+    await ws.send_json({"id": 1, "type": "charge_board/stats", "year": 2026, "vehicle_id": vid})
+    october = (await ws.receive_json())["result"]["rows"][9]
+    assert first in calls
+    assert october["km"] == 443.0
+    assert october["energy_kwh"] == pytest.approx(73.0)  # what was charged in the month
+    assert october["cost_per_100km"] == pytest.approx(10.04 / 443 * 100)

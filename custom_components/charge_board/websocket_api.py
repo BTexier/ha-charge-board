@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import voluptuous as vol
@@ -240,6 +241,8 @@ async def stats(hub: Hub, msg: dict) -> dict:
     found = [s for s in hub.store.sessions if vid is None or s.vehicle_id == vid]
     km, partial = await hub.async_km_by_month(vid, months) if vid else ({}, set())
     rows = month_rows(found, months, km, dt_util.get_default_time_zone(), partial)
+    if vid:
+        await _pair_partial(hub, vid, rows, found)
     now = _local_month(dt_util.utcnow().timestamp())
     return {"currency": hub.hass.config.currency, "rows": rows, "total": total_row(rows, now)}
 
@@ -269,9 +272,14 @@ async def vehicle(hub: Hub, msg: dict) -> dict:
 
     start = now - 30 * 86400
     km_30d, covered_from = await hub.async_km_between(vid, start, now)
-    # Only the energy charged since the odometer is tracked goes with these km.
-    energy_30d = sum(s.energy_kwh for s in mine if _start(s) >= covered_from)
-    enough = km_30d is not None and km_30d >= MIN_KM_FOR_CONSUMPTION
+    first = _first_start(mine)
+    if first is not None and first > covered_from:
+        # Nothing recorded before the first charge: km from it, the charges after it.
+        km_30d, covered_from = await hub.async_km_between(vid, first, now)
+        energy_30d = sum(s.energy_kwh for s in mine if _start(s) > covered_from)
+    else:
+        energy_30d = sum(s.energy_kwh for s in mine if _start(s) >= covered_from)
+    enough = km_30d is not None and km_30d >= MIN_KM_FOR_CONSUMPTION and energy_30d > 0
     consumption = energy_30d / km_30d * 100 if enough else None
     autonomy = (
         capacity * soc / 100 / consumption * 100
@@ -281,11 +289,11 @@ async def vehicle(hub: Hub, msg: dict) -> dict:
     months = _last_months(now)
     km, partial = await hub.async_km_by_month(vid, months)
     rows = month_rows(mine, months, km, _tz(), partial)
+    await _pair_partial(hub, vid, rows, mine)
     for row in rows:
         km = row["km"]
-        row["kwh_100km"] = (
-            row["energy_kwh"] / km * 100 if km and km >= MIN_KM_FOR_CONSUMPTION else None
-        )
+        energy = row.get("paired_energy_kwh", row["energy_kwh"])
+        row["kwh_100km"] = energy / km * 100 if km and km >= MIN_KM_FOR_CONSUMPTION else None
 
     last = hub.last_session_of(vid)
     source = hub.target_source(vid)
@@ -330,6 +338,38 @@ async def vehicle(hub: Hub, msg: dict) -> dict:
         "cut_ignored": source == "home"
         and not any(c.get("plug_entity") and c.get("switch_entity") for c in hub.chargers.values()),
     }
+
+
+def _first_start(sessions: list[Session]) -> float | None:
+    return min((_start(s) for s in sessions), default=None)
+
+
+async def _pair_partial(hub: Hub, vid: str, rows: list[dict], sessions: list[Session]) -> None:
+    """Fix the per-100-km figures of the month where the odometer tracking began.
+
+    Its km run from when the statistics began, which may be before the first recorded
+    charge: those km were driven on energy never recorded. When the first charge falls in
+    that month, the km are counted from it and the ratios use only the charges after it
+    (the first one refilled what was driven before). The row's sessions, energy and cost
+    stay what was charged in the month.
+    """
+    first = _first_start(sessions)
+    if first is None:
+        return
+    now = dt_util.utcnow().timestamp()
+    tz = _tz()
+    for row in rows:
+        if not row["km_partial"] or _local_month(first) != row["month"]:
+            continue
+        start = datetime.strptime(row["month"], "%Y-%m").replace(tzinfo=tz)
+        end = (start + timedelta(days=32)).replace(day=1).timestamp()
+        km, _ = await hub.async_km_between(vid, first, min(end, now))
+        after = [s for s in sessions if _start(s) > first]
+        paired = month_rows(after, [row["month"]], {row["month"]: km}, tz)[0]
+        row["km"] = km
+        for key in ("cost_per_100km", "fuel_cost", "savings", "fuel_price", "fuel_l100"):
+            row[key] = paired[key]
+        row["paired_energy_kwh"] = paired["energy_kwh"]
 
 
 def _tz():
