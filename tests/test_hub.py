@@ -383,3 +383,81 @@ async def test_consumption_sensor_after_a_session(hass, freezer):
     state = hass.states.get("sensor.twingo_consommation_recharge")
     assert float(state.state) == pytest.approx(13.75)
     assert state.attributes["unit_of_measurement"] == "kWh/100km"
+
+
+# --- Home objective -------------------------------------------------------------------------
+
+
+async def _home_entry(hass):
+    hass.states.async_set("sensor.p", "2200", {"unit_of_measurement": "W"})
+    hass.states.async_set("binary_sensor.plug", "on")
+    hass.states.async_set("sensor.soc", "70")
+    hass.states.async_set("switch.x", "on")
+    entry = MockConfigEntry(
+        domain="charge_board",
+        subentries_data=[
+            {
+                "data": {**CHARGER, "switch_entity": "switch.x"},
+                "subentry_type": "charger",
+                "title": "Dé",
+                "unique_id": None,
+            },
+            {
+                "data": {**VEHICLE, "target_fixed": 80, "target_source": "home"},
+                "subentry_type": "vehicle",
+                "title": "Twingo",
+                "unique_id": None,
+            },
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def test_home_target_cuts_then_restores_at_unplug(hass, freezer):
+    off = async_mock_service(hass, "switch", "turn_off")
+    on = async_mock_service(hass, "switch", "turn_on")
+    reached = []
+    hass.bus.async_listen("charge_board_target_reached", reached.append)
+    await _home_entry(hass)
+    await _run(hass, freezer, 120)
+    assert off == []
+    hass.states.async_set("sensor.soc", "80")
+    await _run(hass, freezer, 60)
+    assert len(off) == 1 and off[0].data["entity_id"] == "switch.x"
+    assert reached[0].data["target"] == 80
+    hass.states.async_set("switch.x", "on")  # turned back on by hand
+    await _run(hass, freezer, 120)
+    assert len(off) == 1
+    freezer.tick(5)
+    hass.states.async_set("binary_sensor.plug", "off")
+    await hass.async_block_till_done()
+    assert len(on) == 1
+
+
+async def test_cut_survives_a_reload(hass, freezer):
+    async_mock_service(hass, "switch", "turn_off")
+    on = async_mock_service(hass, "switch", "turn_on")
+    entry = await _home_entry(hass)
+    hass.states.async_set("sensor.soc", "85")
+    await _run(hass, freezer, 60)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(5)
+    hass.states.async_set("binary_sensor.plug", "off")
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 30)
+    assert len(on) == 1
+
+
+async def test_vehicle_target_never_cuts(hass, setup, freezer):
+    off = async_mock_service(hass, "switch", "turn_off")
+    entry, cid = setup
+    hub = entry.runtime_data
+    hub.chargers[cid]["switch_entity"] = "switch.x"
+    hub.vehicles[hub.vehicle_for(cid)]["target_source"] = "vehicle"
+    hass.states.async_set("sensor.soc", "100")
+    await _run(hass, freezer, 60)
+    assert off == []

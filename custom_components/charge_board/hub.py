@@ -34,6 +34,7 @@ from .model import Session
 from .notifications import plugged_text, started_text, summary_text
 from .panel import URL_PATH
 from .store import SessionStore
+from .target import should_cut
 from .tracker import Sample, SessionTracker, TrackerEvent, TrackerSettings
 
 LOGGER = logging.getLogger(__name__)
@@ -85,6 +86,8 @@ class Hub:
         first = next(iter(self.vehicles), None)
         self.selected: dict[str, str | None] = dict.fromkeys(self.chargers, first)
         self.trackers: dict[str, SessionTracker] = {}
+        # Charge Board turned the charger's switch off at a home objective (until unplug).
+        self.cut: dict[str, bool] = {}
         o = self.options
         self.priced = bool(o.get("price_entity")) or any(
             o.get(k) is not None for k in ("off_peak_price", "peak_price")
@@ -107,8 +110,9 @@ class Hub:
                 if saved
                 else SessionTracker(cid, settings, _new_id)
             )
+            self.cut[cid] = bool((saved or {}).get("cut"))
         # Also drops the states of removed chargers.
-        self.store.trackers_state = {cid: t.to_dict() for cid, t in self.trackers.items()}
+        self.store.trackers_state = {cid: self._state_of(cid) for cid in self.trackers}
 
     @callback
     def async_start_feeding(self) -> None:
@@ -148,12 +152,14 @@ class Hub:
     def _feed_all(self) -> None:
         announced = False
         for cid, tracker in self.trackers.items():
-            finished = tracker.feed(self.sample_for(cid), self.vehicle_for(cid))
+            sample = self.sample_for(cid)
+            finished = tracker.feed(sample, self.vehicle_for(cid))
             if finished is not None:
                 finished.fuel_price = self.fuel_price()
                 finished.fuel_l100 = (self.vehicles.get(finished.vehicle_id) or {}).get("fuel_l100")
                 self.entry.async_create_task(self.hass, self.store.async_add(finished))
-            self.store.trackers_state[cid] = tracker.to_dict()
+            announced |= self._apply_target(cid, sample)
+            self.store.trackers_state[cid] = self._state_of(cid)
             for event in tracker.pop_events():
                 announced = True
                 self._announce(cid, event)
@@ -163,6 +169,54 @@ class Hub:
             self.entry.async_create_task(self.hass, self.store.async_flush_trackers())
         else:
             self.store.async_save_trackers()
+
+    def _state_of(self, charger_id: str) -> dict:
+        return {**self.trackers[charger_id].to_dict(), "cut": self.cut.get(charger_id, False)}
+
+    @callback
+    def _apply_target(self, charger_id: str, sample: Sample) -> bool:
+        """Cut at a home objective, switch back on at unplug; True when the state changed.
+
+        A switch turned back on by hand stays on: no new cut before the unplug.
+        """
+        c = self.chargers[charger_id]
+        switch = c.get("switch_entity")
+        if self.cut[charger_id] and sample.plugged is False:
+            self.cut[charger_id] = False
+            if switch:
+                self._switch(switch, "turn_on")
+            return True
+        vid = self.vehicle_for(charger_id)
+        target = self.target_for(vid)
+        if not should_cut(
+            source=self.target_source(vid) if vid in self.vehicles else "vehicle",
+            has_plug=bool(c.get("plug_entity")),
+            has_switch=bool(switch),
+            plugged=sample.plugged,
+            soc=sample.soc,
+            target=target,
+            already_cut=self.cut[charger_id],
+        ):
+            return False
+        self.cut[charger_id] = True
+        self._switch(switch, "turn_off")
+        self.hass.bus.async_fire(
+            f"{EVENT_PREFIX}target_reached",
+            {"charger_id": charger_id, "vehicle_id": vid, "soc": sample.soc, "target": target},
+        )
+        return True
+
+    @callback
+    def _switch(self, entity_id: str, service: str) -> None:
+        async def call() -> None:
+            try:
+                await self.hass.services.async_call(
+                    "switch", service, {"entity_id": entity_id}, blocking=True
+                )
+            except Exception as err:  # noqa: BLE001 - must never break recording
+                LOGGER.warning("Charge Board could not %s %s: %s", service, entity_id, err)
+
+        self.entry.async_create_background_task(self.hass, call(), f"{DOMAIN} {service}")
 
     @callback
     def _announce(self, charger_id: str, event: TrackerEvent) -> None:
