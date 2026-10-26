@@ -461,3 +461,35 @@ async def test_vehicle_target_never_cuts(hass, setup, freezer):
     hass.states.async_set("sensor.soc", "100")
     await _run(hass, freezer, 60)
     assert off == []
+
+
+async def test_stale_battery_at_plug_in_is_undone_when_it_reports(hass, freezer):
+    off = async_mock_service(hass, "switch", "turn_off")
+    on = async_mock_service(hass, "switch", "turn_on")
+    hass.states.async_set("sensor.soc", "80")  # stale: the car stopped at 80 % then drove
+    await _home_entry(hass)
+    hass.states.async_set("sensor.soc", "80")
+    await _run(hass, freezer, 60)
+    assert len(off) == 1
+    hass.states.async_set("sensor.soc", "76")  # the real level arrives
+    await _run(hass, freezer, 60)
+    assert len(on) == 1  # charging allowed again
+    hass.states.async_set("sensor.soc", "80")
+    await _run(hass, freezer, 60)
+    assert len(off) == 2
+
+
+async def test_unavailable_switch_at_unplug_is_retried(hass, freezer):
+    async_mock_service(hass, "switch", "turn_off")
+    on = async_mock_service(hass, "switch", "turn_on")
+    await _home_entry(hass)
+    hass.states.async_set("sensor.soc", "85")
+    await _run(hass, freezer, 60)
+    hass.states.async_set("switch.x", "unavailable")
+    freezer.tick(5)
+    hass.states.async_set("binary_sensor.plug", "off")
+    await hass.async_block_till_done()
+    assert on == []
+    hass.states.async_set("switch.x", "off")
+    await _run(hass, freezer, 30)
+    assert len(on) == 1

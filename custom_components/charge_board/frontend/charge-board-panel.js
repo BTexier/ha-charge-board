@@ -793,7 +793,7 @@ var te=globalThis,se=te.ShadowRoot&&(te.ShadyCSS===void 0||te.ShadyCSS.nativeSha
         ${this._overview.vehicles.map(e=>l`<button
             class="chip"
             aria-pressed=${e.id===this._vehicle}
-            @click=${()=>{this._vehicle=e.id,this._soc=[]}}
+            @click=${()=>{e.id!==this._vehicle&&(this._vehicle=e.id,this._soc=[])}}
           >
             ${e.name}
           </button>`)}

@@ -118,3 +118,15 @@ def test_consumption_since_needs_5_km_and_known_values():
     assert consumption_since(80, 60, 100, 103, 27.5) is None
     assert consumption_since(None, 60, 100, 140, 27.5) is None
     assert consumption_since(60, 80, 100, 140, 27.5) is None  # charged meanwhile
+
+
+def test_total_of_the_current_year_ignores_future_months_and_months_without_charge():
+    rows = month_rows(
+        [s(OCT_10, fuel_price=1.8, fuel_l100=6)],
+        ["2026-09", "2026-10", "2026-11"],
+        {"2026-09": 50.0, "2026-10": 200.0, "2026-11": None},
+        PARIS,
+    )
+    total = total_row(rows, until="2026-10")
+    assert total["km"] == pytest.approx(250.0)
+    assert total["savings"] == pytest.approx(rows[1]["savings"])

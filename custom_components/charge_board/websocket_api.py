@@ -15,7 +15,7 @@ from .const import DOMAIN, SIGNAL_LIVE, SIGNAL_UPDATED
 from .estimate import estimate_end
 from .hub import Hub
 from .model import Session
-from .stats import consumption_since, month_rows, total_row
+from .stats import MIN_KM_FOR_CONSUMPTION, consumption_since, month_rows, total_row
 
 
 def _hub(hass: HomeAssistant) -> Hub | None:
@@ -240,7 +240,8 @@ async def stats(hub: Hub, msg: dict) -> dict:
     found = [s for s in hub.store.sessions if vid is None or s.vehicle_id == vid]
     km = await hub.async_km_by_month(vid, months) if vid else {}
     rows = month_rows(found, months, km, dt_util.get_default_time_zone())
-    return {"currency": hub.hass.config.currency, "rows": rows, "total": total_row(rows)}
+    now = _local_month(dt_util.utcnow().timestamp())
+    return {"currency": hub.hass.config.currency, "rows": rows, "total": total_row(rows, now)}
 
 
 def _last_months(now: float, n: int = 12) -> list[str]:
@@ -269,7 +270,8 @@ async def vehicle(hub: Hub, msg: dict) -> dict:
     start = now - 30 * 86400
     km_30d = await hub.async_km_between(vid, start, now)
     energy_30d = sum(s.energy_kwh for s in mine if _start(s) >= start)
-    consumption = energy_30d / km_30d * 100 if km_30d else None
+    enough = km_30d is not None and km_30d >= MIN_KM_FOR_CONSUMPTION
+    consumption = energy_30d / km_30d * 100 if enough else None
     autonomy = (
         capacity * soc / 100 / consumption * 100
         if consumption and soc is not None and capacity
@@ -278,14 +280,19 @@ async def vehicle(hub: Hub, msg: dict) -> dict:
     months = _last_months(now)
     rows = month_rows(mine, months, await hub.async_km_by_month(vid, months), _tz())
     for row in rows:
-        row["kwh_100km"] = row["energy_kwh"] / row["km"] * 100 if row["km"] else None
+        km = row["km"]
+        row["kwh_100km"] = (
+            row["energy_kwh"] / km * 100 if km and km >= MIN_KM_FOR_CONSUMPTION else None
+        )
 
     last = hub.last_session_of(vid)
     source = hub.target_source(vid)
     fuel_entity = hub.options.get("fuel_price_entity")
 
     def item(key: str, entity_id: str | None, value) -> dict:
-        return {"key": key, "entity_id": entity_id, "value": value, "ok": value is not None}
+        # A configured entity is healthy only if it reads a number, whatever the fallback.
+        ok = hub._number(entity_id) is not None if entity_id else value is not None
+        return {"key": key, "entity_id": entity_id, "value": value, "ok": ok}
 
     return {
         "id": vid,

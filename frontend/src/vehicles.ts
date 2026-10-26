@@ -83,6 +83,7 @@ export class ChargeBoardVehicles extends LitElement {
             class="chip"
             aria-pressed=${v.id === this._vehicle}
             @click=${() => {
+              if (v.id === this._vehicle) return;
               this._vehicle = v.id;
               this._soc = [];
             }}

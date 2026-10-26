@@ -251,3 +251,23 @@ async def test_vehicle_command_unknown_is_not_found(env):
     _hub, _cid, _vid, ws = env
     await ws.send_json({"id": 1, "type": "charge_board/vehicle", "vehicle_id": "nope"})
     assert (await ws.receive_json())["error"]["code"] == "not_found"
+
+
+async def test_vehicle_consumption_needs_5_km_and_flags_a_broken_entity(env, hass, monkeypatch):
+    hub, _cid, vid, ws = env
+
+    async def km(vehicle_id, start, end):
+        return 3.0
+
+    monkeypatch.setattr(hub, "async_km_between", km)
+    hub.vehicles[vid]["target_entity"] = "input_number.target"
+    hass.states.async_set("input_number.target", "unavailable")
+    now = dt_util.utcnow().timestamp()
+    await put(hub, sess("a", now - 86400, kwh=10, vehicle_id=vid))
+    await ws.send_json({"id": 1, "type": "charge_board/vehicle", "vehicle_id": vid})
+    res = (await ws.receive_json())["result"]
+    assert res["consumption_30d"] is None
+    assert res["autonomy_km"] is None
+    target = next(c for c in res["config"] if c["key"] == "target")
+    assert target["ok"] is False
+    assert target["value"] == 80  # the fixed fallback still shows

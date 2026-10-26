@@ -181,13 +181,21 @@ class Hub:
         """
         c = self.chargers[charger_id]
         switch = c.get("switch_entity")
-        if self.cut[charger_id] and sample.plugged is False:
+        vid = self.vehicle_for(charger_id)
+        target = self.target_for(vid)
+        if self.cut[charger_id]:
+            unplugged = sample.plugged is False
+            # The car's level arrives minutes late: a cut at plug-in on the level of the
+            # previous charge is undone when the real (lower) level reports.
+            stale = sample.plugged and None not in (sample.soc, target) and sample.soc < target
+            if not (unplugged or stale):
+                return False
+            if switch and self._state(switch) is None:
+                return False  # unavailable (charger reconnecting): retry on the next sample
             self.cut[charger_id] = False
             if switch:
                 self._switch(switch, "turn_on")
             return True
-        vid = self.vehicle_for(charger_id)
-        target = self.target_for(vid)
         if not should_cut(
             source=self.target_source(vid) if vid in self.vehicles else "vehicle",
             has_plug=bool(c.get("plug_entity")),
@@ -199,6 +207,7 @@ class Hub:
         ):
             return False
         self.cut[charger_id] = True
+        LOGGER.info("Charge Board stops %s at the home target %s %%", c["name"], target)
         self._switch(switch, "turn_off")
         self.hass.bus.async_fire(
             f"{EVENT_PREFIX}target_reached",

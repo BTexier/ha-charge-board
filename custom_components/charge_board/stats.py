@@ -67,8 +67,10 @@ def month_rows(
     return [_row(m, by_month[m], km.get(m)) for m in months]
 
 
-def total_row(rows: list[dict]) -> dict:
-    """Sums of the rows; km only when every month has them, ratios recomputed on the sums."""
+def total_row(rows: list[dict], until: str | None = None) -> dict:
+    """Sums of the rows up to `until` (the current month); km only when every month has them,
+    ratios recomputed on the sums."""
+    rows = [r for r in rows if until is None or r["month"] <= until]
     priced = [r["cost"] for r in rows if r["cost"] is not None]
     energy = sum(r["energy_kwh"] for r in rows)
     shared = [r for r in rows if r["off_peak_share"] is not None]
@@ -102,8 +104,9 @@ def total_row(rows: list[dict]) -> dict:
     }
     _ratios(total)
     # Savings of the year only when every month has its own (no extrapolated fuel price).
+    # Months without a charge have no fuel price frozen: they do not count.
     for key in ("fuel_cost", "savings"):
-        values = [r[key] for r in rows]
+        values = [r[key] for r in rows if r["sessions"]]
         total[key] = sum(values) if values and None not in values else None
     return total
 
