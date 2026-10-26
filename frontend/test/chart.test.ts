@@ -43,3 +43,29 @@ describe("chart gaps (merged sessions)", () => {
     ]);
   });
 });
+
+import { barsFor, linePath } from "../src/chart";
+
+describe("bars and lines", () => {
+  it("scales stacked bars to the highest month", () => {
+    const bars = barsFor(
+      [
+        { off_peak_cost: 6, peak_cost: 2 },
+        { off_peak_cost: 0, peak_cost: 0 },
+        { off_peak_cost: 2, peak_cost: 2 },
+      ],
+      100,
+    );
+    expect(bars).toHaveLength(3);
+    expect(bars[0].hOff + bars[0].hPeak).toBe(100);
+    expect(bars[0].hOff).toBe(75);
+    expect(bars[1].hOff + bars[1].hPeak).toBe(0);
+    expect(bars[2].hOff).toBe(25);
+  });
+  it("draws no line without points", () => {
+    expect(linePath([], 100, 50, 0, 10)).toBe("");
+  });
+  it("draws a line from the first point", () => {
+    expect(linePath([{ t: 0, v: 100 }, { t: 10, v: 50 }], 100, 50, 0, 10)).toBe("M0 0 L100 25");
+  });
+});

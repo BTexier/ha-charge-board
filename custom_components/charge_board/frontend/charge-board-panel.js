@@ -1,15 +1,15 @@
-var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,oe=Symbol(),Ae=new WeakMap,N=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==oe)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o,e=this.t;if(G&&t===void 0){let s=e!==void 0&&e.length===1;s&&(t=Ae.get(e)),t===void 0&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),s&&Ae.set(e,t))}return t}toString(){return this.cssText}},Se=i=>new N(typeof i=="string"?i:i+"",void 0,oe),b=(i,...t)=>{let e=i.length===1?i[0]:t.reduce((s,r,n)=>s+(o=>{if(o._$cssResult$===!0)return o.cssText;if(typeof o=="number")return o;throw Error("Value passed to 'css' function must be a 'css' function result: "+o+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(r)+i[n+1],i[0]);return new N(e,i,oe)},Ce=(i,t)=>{if(G)i.adoptedStyleSheets=t.map(e=>e instanceof CSSStyleSheet?e:e.styleSheet);else for(let e of t){let s=document.createElement("style"),r=X.litNonce;r!==void 0&&s.setAttribute("nonce",r),s.textContent=e.cssText,i.appendChild(s)}},ae=G?i=>i:i=>i instanceof CSSStyleSheet?(t=>{let e="";for(let s of t.cssRules)e+=s.cssText;return Se(e)})(i):i;var{is:st,defineProperty:rt,getOwnPropertyDescriptor:it,getOwnPropertyNames:nt,getOwnPropertySymbols:ot,getPrototypeOf:at}=Object,Q=globalThis,Ee=Q.trustedTypes,ct=Ee?Ee.emptyScript:"",lt=Q.reactiveElementPolyfillSupport,z=(i,t)=>i,ce={toAttribute(i,t){switch(t){case Boolean:i=i?ct:null;break;case Object:case Array:i=i==null?i:JSON.stringify(i)}return i},fromAttribute(i,t){let e=i;switch(t){case Boolean:e=i!==null;break;case Number:e=i===null?null:Number(i);break;case Object:case Array:try{e=JSON.parse(i)}catch{e=null}}return e}},He=(i,t)=>!st(i,t),Pe={attribute:!0,type:String,converter:ce,reflect:!1,useDefault:!1,hasChanged:He};Symbol.metadata??=Symbol("metadata"),Q.litPropertyMetadata??=new WeakMap;var $=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=Pe){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){let s=Symbol(),r=this.getPropertyDescriptor(t,s,e);r!==void 0&&rt(this.prototype,t,r)}}static getPropertyDescriptor(t,e,s){let{get:r,set:n}=it(this.prototype,t)??{get(){return this[e]},set(o){this[e]=o}};return{get:r,set(o){let c=r?.call(this);n?.call(this,o),this.requestUpdate(t,c,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??Pe}static _$Ei(){if(this.hasOwnProperty(z("elementProperties")))return;let t=at(this);t.finalize(),t.l!==void 0&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(z("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(z("properties"))){let e=this.properties,s=[...nt(e),...ot(e)];for(let r of s)this.createProperty(r,e[r])}let t=this[Symbol.metadata];if(t!==null){let e=litPropertyMetadata.get(t);if(e!==void 0)for(let[s,r]of e)this.elementProperties.set(s,r)}this._$Eh=new Map;for(let[e,s]of this.elementProperties){let r=this._$Eu(e,s);r!==void 0&&this._$Eh.set(r,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){let e=[];if(Array.isArray(t)){let s=new Set(t.flat(1/0).reverse());for(let r of s)e.unshift(ae(r))}else t!==void 0&&e.push(ae(t));return e}static _$Eu(t,e){let s=e.attribute;return s===!1?void 0:typeof s=="string"?s:typeof t=="string"?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),this.renderRoot!==void 0&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){let t=new Map,e=this.constructor.elementProperties;for(let s of e.keys())this.hasOwnProperty(s)&&(t.set(s,this[s]),delete this[s]);t.size>0&&(this._$Ep=t)}createRenderRoot(){let t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return Ce(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,s){this._$AK(t,s)}_$ET(t,e){let s=this.constructor.elementProperties.get(t),r=this.constructor._$Eu(t,s);if(r!==void 0&&s.reflect===!0){let n=(s.converter?.toAttribute!==void 0?s.converter:ce).toAttribute(e,s.type);this._$Em=t,n==null?this.removeAttribute(r):this.setAttribute(r,n),this._$Em=null}}_$AK(t,e){let s=this.constructor,r=s._$Eh.get(t);if(r!==void 0&&this._$Em!==r){let n=s.getPropertyOptions(r),o=typeof n.converter=="function"?{fromAttribute:n.converter}:n.converter?.fromAttribute!==void 0?n.converter:ce;this._$Em=r;let c=o.fromAttribute(e,n.type);this[r]=c??this._$Ej?.get(r)??c,this._$Em=null}}requestUpdate(t,e,s,r=!1,n){if(t!==void 0){let o=this.constructor;if(r===!1&&(n=this[t]),s??=o.getPropertyOptions(t),!((s.hasChanged??He)(n,e)||s.useDefault&&s.reflect&&n===this._$Ej?.get(t)&&!this.hasAttribute(o._$Eu(t,s))))return;this.C(t,e,s)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(t,e,{useDefault:s,reflect:r,wrapped:n},o){s&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),n!==!0||o!==void 0)||(this._$AL.has(t)||(this.hasUpdated||s||(e=void 0),this._$AL.set(t,e)),r===!0&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}let t=this.scheduleUpdate();return t!=null&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[r,n]of this._$Ep)this[r]=n;this._$Ep=void 0}let s=this.constructor.elementProperties;if(s.size>0)for(let[r,n]of s){let{wrapped:o}=n,c=this[r];o!==!0||this._$AL.has(r)||c===void 0||this.C(r,void 0,n,c)}}let t=!1,e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(s=>s.hostUpdate?.()),this.update(e)):this._$EM()}catch(s){throw t=!1,this._$EM(),s}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(e=>e.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(e=>this._$ET(e,this[e])),this._$EM()}updated(t){}firstUpdated(t){}};$.elementStyles=[],$.shadowRootOptions={mode:"open"},$[z("elementProperties")]=new Map,$[z("finalized")]=new Map,lt?.({ReactiveElement:$}),(Q.reactiveElementVersions??=[]).push("2.1.2");var _e=globalThis,Me=i=>i,Y=_e.trustedTypes,Oe=Y?Y.createPolicy("lit-html",{createHTML:i=>i}):void 0,Ne="$lit$",x=`lit$${Math.random().toFixed(9).slice(2)}$`,ze="?"+x,ht=`<${ze}>`,E=document,I=()=>E.createComment(""),j=i=>i===null||typeof i!="object"&&typeof i!="function",me=Array.isArray,dt=i=>me(i)||typeof i?.[Symbol.iterator]=="function",le=`[ 	
-\f\r]`,V=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,Te=/-->/g,Re=/>/g,S=RegExp(`>|${le}(?:([^\\s"'>=/]+)(${le}*=${le}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`,"g"),De=/'/g,Ue=/"/g,Ve=/^(?:script|style|textarea|title)$/i,fe=i=>(t,...e)=>({_$litType$:i,strings:t,values:e}),l=fe(1),Z=fe(2),kt=fe(3),P=Symbol.for("lit-noChange"),h=Symbol.for("lit-nothing"),Le=new WeakMap,C=E.createTreeWalker(E,129);function Ie(i,t){if(!me(i)||!i.hasOwnProperty("raw"))throw Error("invalid template strings array");return Oe!==void 0?Oe.createHTML(t):t}var pt=(i,t)=>{let e=i.length-1,s=[],r,n=t===2?"<svg>":t===3?"<math>":"",o=V;for(let c=0;c<e;c++){let a=i[c],p,d,u=-1,g=0;for(;g<a.length&&(o.lastIndex=g,d=o.exec(a),d!==null);)g=o.lastIndex,o===V?d[1]==="!--"?o=Te:d[1]!==void 0?o=Re:d[2]!==void 0?(Ve.test(d[2])&&(r=RegExp("</"+d[2],"g")),o=S):d[3]!==void 0&&(o=S):o===S?d[0]===">"?(o=r??V,u=-1):d[1]===void 0?u=-2:(u=o.lastIndex-d[2].length,p=d[1],o=d[3]===void 0?S:d[3]==='"'?Ue:De):o===Ue||o===De?o=S:o===Te||o===Re?o=V:(o=S,r=void 0);let _=o===S&&i[c+1].startsWith("/>")?" ":"";n+=o===V?a+ht:u>=0?(s.push(p),a.slice(0,u)+Ne+a.slice(u)+x+_):a+x+(u===-2?c:_)}return[Ie(i,n+(i[e]||"<?>")+(t===2?"</svg>":t===3?"</math>":"")),s]},B=class i{constructor({strings:t,_$litType$:e},s){let r;this.parts=[];let n=0,o=0,c=t.length-1,a=this.parts,[p,d]=pt(t,e);if(this.el=i.createElement(p,s),C.currentNode=this.el.content,e===2||e===3){let u=this.el.content.firstChild;u.replaceWith(...u.childNodes)}for(;(r=C.nextNode())!==null&&a.length<c;){if(r.nodeType===1){if(r.hasAttributes())for(let u of r.getAttributeNames())if(u.endsWith(Ne)){let g=d[o++],_=r.getAttribute(u).split(x),A=/([.?@])?(.*)/.exec(g);a.push({type:1,index:n,name:A[2],strings:_,ctor:A[1]==="."?de:A[1]==="?"?pe:A[1]==="@"?ue:D}),r.removeAttribute(u)}else u.startsWith(x)&&(a.push({type:6,index:n}),r.removeAttribute(u));if(Ve.test(r.tagName)){let u=r.textContent.split(x),g=u.length-1;if(g>0){r.textContent=Y?Y.emptyScript:"";for(let _=0;_<g;_++)r.append(u[_],I()),C.nextNode(),a.push({type:2,index:++n});r.append(u[g],I())}}}else if(r.nodeType===8)if(r.data===ze)a.push({type:2,index:n});else{let u=-1;for(;(u=r.data.indexOf(x,u+1))!==-1;)a.push({type:7,index:n}),u+=x.length-1}n++}}static createElement(t,e){let s=E.createElement("template");return s.innerHTML=t,s}};function R(i,t,e=i,s){if(t===P)return t;let r=s!==void 0?e._$Co?.[s]:e._$Cl,n=j(t)?void 0:t._$litDirective$;return r?.constructor!==n&&(r?._$AO?.(!1),n===void 0?r=void 0:(r=new n(i),r._$AT(i,e,s)),s!==void 0?(e._$Co??=[])[s]=r:e._$Cl=r),r!==void 0&&(t=R(i,r._$AS(i,t.values),r,s)),t}var he=class{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){let{el:{content:e},parts:s}=this._$AD,r=(t?.creationScope??E).importNode(e,!0);C.currentNode=r;let n=C.nextNode(),o=0,c=0,a=s[0];for(;a!==void 0;){if(o===a.index){let p;a.type===2?p=new K(n,n.nextSibling,this,t):a.type===1?p=new a.ctor(n,a.name,a.strings,this,t):a.type===6&&(p=new ge(n,this,t)),this._$AV.push(p),a=s[++c]}o!==a?.index&&(n=C.nextNode(),o++)}return C.currentNode=E,r}p(t){let e=0;for(let s of this._$AV)s!==void 0&&(s.strings!==void 0?(s._$AI(t,s,e),e+=s.strings.length-2):s._$AI(t[e])),e++}},K=class i{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,s,r){this.type=2,this._$AH=h,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=s,this.options=r,this._$Cv=r?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode,e=this._$AM;return e!==void 0&&t?.nodeType===11&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=R(this,t,e),j(t)?t===h||t==null||t===""?(this._$AH!==h&&this._$AR(),this._$AH=h):t!==this._$AH&&t!==P&&this._(t):t._$litType$!==void 0?this.$(t):t.nodeType!==void 0?this.T(t):dt(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==h&&j(this._$AH)?this._$AA.nextSibling.data=t:this.T(E.createTextNode(t)),this._$AH=t}$(t){let{values:e,_$litType$:s}=t,r=typeof s=="number"?this._$AC(t):(s.el===void 0&&(s.el=B.createElement(Ie(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===r)this._$AH.p(e);else{let n=new he(r,this),o=n.u(this.options);n.p(e),this.T(o),this._$AH=n}}_$AC(t){let e=Le.get(t.strings);return e===void 0&&Le.set(t.strings,e=new B(t)),e}k(t){me(this._$AH)||(this._$AH=[],this._$AR());let e=this._$AH,s,r=0;for(let n of t)r===e.length?e.push(s=new i(this.O(I()),this.O(I()),this,this.options)):s=e[r],s._$AI(n),r++;r<e.length&&(this._$AR(s&&s._$AB.nextSibling,r),e.length=r)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){let s=Me(t).nextSibling;Me(t).remove(),t=s}}setConnected(t){this._$AM===void 0&&(this._$Cv=t,this._$AP?.(t))}},D=class{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,s,r,n){this.type=1,this._$AH=h,this._$AN=void 0,this.element=t,this.name=e,this._$AM=r,this.options=n,s.length>2||s[0]!==""||s[1]!==""?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=h}_$AI(t,e=this,s,r){let n=this.strings,o=!1;if(n===void 0)t=R(this,t,e,0),o=!j(t)||t!==this._$AH&&t!==P,o&&(this._$AH=t);else{let c=t,a,p;for(t=n[0],a=0;a<n.length-1;a++)p=R(this,c[s+a],e,a),p===P&&(p=this._$AH[a]),o||=!j(p)||p!==this._$AH[a],p===h?t=h:t!==h&&(t+=(p??"")+n[a+1]),this._$AH[a]=p}o&&!r&&this.j(t)}j(t){t===h?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}},de=class extends D{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===h?void 0:t}},pe=class extends D{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==h)}},ue=class extends D{constructor(t,e,s,r,n){super(t,e,s,r,n),this.type=5}_$AI(t,e=this){if((t=R(this,t,e,0)??h)===P)return;let s=this._$AH,r=t===h&&s!==h||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,n=t!==h&&(s===h||r);r&&this.element.removeEventListener(this.name,this,s),n&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}},ge=class{constructor(t,e,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(t){R(this,t)}};var ut=_e.litHtmlPolyfillSupport;ut?.(B,K),(_e.litHtmlVersions??=[]).push("3.3.3");var je=(i,t,e)=>{let s=e?.renderBefore??t,r=s._$litPart$;if(r===void 0){let n=e?.renderBefore??null;s._$litPart$=r=new K(t.insertBefore(I(),n),n,void 0,e??{})}return r._$AI(i),r};var ve=globalThis,m=class extends ${constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){let e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=je(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return P}};m._$litElement$=!0,m.finalized=!0,ve.litElementHydrateSupport?.({LitElement:m});var gt=ve.litElementPolyfillSupport;gt?.({LitElement:m});(ve.litElementVersions??=[]).push("4.2.2");var H=(i,t,e={})=>i.connection.sendMessagePromise({type:`charge_board/${t}`,...e}),ee=i=>H(i,"overview"),te=(i,t={})=>H(i,"sessions",{...t}),Be=(i,t)=>H(i,"session",{session_id:t}),Ke=(i,t,e)=>H(i,"set_vehicle",{session_id:t,vehicle_id:e}),qe=(i,t)=>H(i,"delete",{session_id:t}),be=(i,t,e)=>H(i,"merge",{session_id:t,other_id:e}),Fe=(i,t,e)=>H(i,"split",{session_id:t,at:e}),We=(i,t)=>i.connection.subscribeMessage(t,{type:"charge_board/subscribe"});var _t={title:"Recharge",tab_overview:"Aper\xE7u",tab_sessions:"Sessions",loading:"Chargement\u2026",error:"Impossible de charger les donn\xE9es",not_loaded:"Charge Board n'est pas charg\xE9",no_chargers:"Aucun chargeur configur\xE9. Ajoutez-en un dans les param\xE8tres de l'int\xE9gration Charge Board.",charging:"En charge",plugged:"Branch\xE9",free:"Libre",power:"puissance",session:"session",cost:"co\xFBt",end:"fin estim\xE9e",end_short:"fin {time}",plugged_since:"Branch\xE9e depuis {time}",charging_since:"en charge depuis {time}",charge_started:"d\xE9but de charge {time}",off_peak:"{share} heures creuses",last_session:"Derni\xE8re session : {summary}",no_session:"Aucune session enregistr\xE9e",no_vehicle:"aucun v\xE9hicule",menu:"Menu",close:"Fermer",all_vehicles:"Tous les v\xE9hicules",all_chargers:"Tous les chargeurs",month:"Mois",sessions_count:"{n} sessions",off_peak_short:"{share} HC",col_start:"D\xE9but",col_end:"Fin",col_vehicle:"V\xE9hicule",col_battery:"Batterie",col_kwh:"kWh",col_duration:"Dur\xE9e de charge",col_cost:"Co\xFBt",edited:"modifi\xE9e",estimated_note:"* co\xFBt estim\xE9",unpriced_note:"\u2265 : {n} session(s) sans prix",no_sessions:"Aucune session pour ces filtres",back:"Retour",session_of:"Session du {day}",energy:"\xE9nergie",battery:"batterie",average:"moyenne",chart_hint:"Touchez le graphique pour choisir o\xF9 couper la session.",plugged_at:"Branch\xE9e",charge:"Charge",unplugged_at:"D\xE9branch\xE9e",off_peak_slice:"Heures creuses",peak_slice:"Heures pleines",price_slice:"{price} /kWh",unknown_price:"Prix inconnu",charging_time:"Temps de charge",plugged_time:"{time} branch\xE9e",vehicle:"V\xE9hicule",delete:"Supprimer",merge_prev:"Fusionner avec la pr\xE9c\xE9dente",merge_next:"Fusionner avec la suivante",split:"Couper",confirm_delete:"Supprimer d\xE9finitivement cette session ?",confirm_split:"Couper la session \xE0 {time} ?",confirm:"Confirmer",cancel:"Annuler",in_progress_note:"Session en cours : corrections impossibles.",err_invalid:"Correction refus\xE9e : op\xE9ration invalide pour cette session.",err_in_progress:"Correction refus\xE9e : la session est encore en cours.",err_not_found:"Cette session n'existe plus."},mt={title:"Charging",tab_overview:"Overview",tab_sessions:"Sessions",loading:"Loading\u2026",error:"Could not load the data",not_loaded:"Charge Board is not loaded",no_chargers:"No charger configured. Add one in the Charge Board integration settings.",charging:"Charging",plugged:"Plugged in",free:"Free",power:"power",session:"session",cost:"cost",end:"estimated end",end_short:"end {time}",plugged_since:"Plugged in since {time}",charging_since:"charging since {time}",charge_started:"charge started {time}",off_peak:"{share} off-peak",last_session:"Last session: {summary}",no_session:"No session recorded",no_vehicle:"no vehicle",menu:"Menu",close:"Close",all_vehicles:"All vehicles",all_chargers:"All chargers",month:"Month",sessions_count:"{n} sessions",off_peak_short:"{share} off-peak",col_start:"Start",col_end:"End",col_vehicle:"Vehicle",col_battery:"Battery",col_kwh:"kWh",col_duration:"Charging time",col_cost:"Cost",edited:"edited",estimated_note:"* estimated cost",unpriced_note:"\u2265: {n} session(s) without a price",no_sessions:"No session for these filters",back:"Back",session_of:"Session of {day}",energy:"energy",battery:"battery",average:"average",chart_hint:"Tap the chart to choose where to split the session.",plugged_at:"Plugged in",charge:"Charge",unplugged_at:"Unplugged",off_peak_slice:"Off-peak",peak_slice:"Peak",price_slice:"{price} /kWh",unknown_price:"Unknown price",charging_time:"Charging time",plugged_time:"{time} plugged in",vehicle:"Vehicle",delete:"Delete",merge_prev:"Merge with previous",merge_next:"Merge with next",split:"Split",confirm_delete:"Delete this session permanently?",confirm_split:"Split the session at {time}?",confirm:"Confirm",cancel:"Cancel",in_progress_note:"Session in progress: no corrections.",err_invalid:"Correction refused: invalid operation for this session.",err_in_progress:"Correction refused: the session is still in progress.",err_not_found:"This session no longer exists."},ft={fr:_t,en:mt},v=i=>i.language?.startsWith("fr")?"fr":"en",y=i=>i.locale?.language??i.language??"en";function w(i,t,e={}){return ft[i][t].replace(/\{(\w+)\}/g,(s,r)=>e[r]??"")}function M(i){let t=i?.code;return t==="not_loaded"?"not_loaded":t==="invalid"||t==="in_progress"||t==="not_found"?`err_${t}`:"error"}var $e=i=>i.replace(/[  ]/g," "),Je=(i,t,e)=>$e(i.toLocaleString(t,{minimumFractionDigits:e,maximumFractionDigits:e}));function k(i,t){return i==null?"\u2014":`${Je(i,t,1)} kWh`}function U(i,t){return i==null?"\u2014":`${Je(i/1e3,t,1)} kW`}function O(i,t,e){return i==null?"\u2014":$e(new Intl.NumberFormat(e,{style:"currency",currency:t}).format(i))}function F(i,t){let e=Math.round(i/60),s=Math.floor(e/60),r=e%60;if(s===0)return`${r} min`;let n=String(r).padStart(2,"0");return t==="fr"?`${s} h ${n}`:`${s} h ${n} min`}function L(i,t){if(i==null&&t==null)return"\u2014";let e=s=>s==null?"\u2014":String(Math.round(s));return`${e(i)} \u2192 ${e(t)} %`}function se(i,t){return $e(i.toLocaleString(t,{style:"percent",maximumFractionDigits:0}))}var re=(i,t,e,s)=>new Intl.DateTimeFormat(t,{timeZone:e,...s}).format(new Date(i*1e3));function T(i,t,e){return re(i,t,e,{hour:"2-digit",minute:"2-digit"})}function q(i,t,e){return re(i,t,e,{day:"2-digit",month:"2-digit"})}function W(i,t,e,s=Date.now()/1e3){let r=T(i,t,e),n=q(i,t,e);return n===q(s,t,e)?r:`${n} ${r}`}function ie(i,t,e){return`${re(i,t,e,{weekday:"short"})} ${q(i,t,e)} ${T(i,t,e)}`}function Xe(i,t){return re(i,"en-CA",t,{year:"numeric",month:"2-digit"})}var Ge={charging:"var(--success-color, #43a047)",plugged:"var(--info-color, #039be5)",free:"var(--disabled-text-color, #9e9e9e)"},ye=class extends m{constructor(){super(...arguments);this.version=0;this._req=0}static{this.properties={hass:{attribute:!1},version:{type:Number},_data:{state:!0},_error:{state:!0},_open:{state:!0}}}updated(e){e.has("version")&&this.hass&&this._fetch(),e.has("_open")&&this._open&&this.renderRoot.querySelector("dialog")?.showModal()}async _fetch(){let e=++this._req;try{let s=await ee(this.hass);if(e!==this._req)return;this._data=s,this._error=void 0}catch(s){e===this._req&&(this._error=M(s))}}_t(e,s){return w(v(this.hass),e,s)}render(){if(this._error)return l`<p class="message">${this._t(this._error)}</p>`;if(!this._data)return l`<p class="message">${this._t("loading")}</p>`;let{chargers:e,style:s}=this._data;if(!e.length)return l`<p class="message">${this._t("no_chargers")}</p>`;if(s!=="compact")return l`<div class="grid">${e.map(n=>this._card(n))}</div>`;let r=e.find(n=>n.id===this._open);return l`
+var te=globalThis,se=te.ShadowRoot&&(te.ShadyCSS===void 0||te.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,de=Symbol(),De=new WeakMap,B=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==de)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o,e=this.t;if(se&&t===void 0){let s=e!==void 0&&e.length===1;s&&(t=De.get(e)),t===void 0&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),s&&De.set(e,t))}return t}toString(){return this.cssText}},Re=i=>new B(typeof i=="string"?i:i+"",void 0,de),$=(i,...t)=>{let e=i.length===1?i[0]:t.reduce((s,r,n)=>s+(o=>{if(o._$cssResult$===!0)return o.cssText;if(typeof o=="number")return o;throw Error("Value passed to 'css' function must be a 'css' function result: "+o+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(r)+i[n+1],i[0]);return new B(e,i,de)},Le=(i,t)=>{if(se)i.adoptedStyleSheets=t.map(e=>e instanceof CSSStyleSheet?e:e.styleSheet);else for(let e of t){let s=document.createElement("style"),r=te.litNonce;r!==void 0&&s.setAttribute("nonce",r),s.textContent=e.cssText,i.appendChild(s)}},pe=se?i=>i:i=>i instanceof CSSStyleSheet?(t=>{let e="";for(let s of t.cssRules)e+=s.cssText;return Re(e)})(i):i;var{is:$t,defineProperty:yt,getOwnPropertyDescriptor:xt,getOwnPropertyNames:wt,getOwnPropertySymbols:kt,getPrototypeOf:St}=Object,re=globalThis,Ne=re.trustedTypes,At=Ne?Ne.emptyScript:"",Ct=re.reactiveElementPolyfillSupport,q=(i,t)=>i,ue={toAttribute(i,t){switch(t){case Boolean:i=i?At:null;break;case Object:case Array:i=i==null?i:JSON.stringify(i)}return i},fromAttribute(i,t){let e=i;switch(t){case Boolean:e=i!==null;break;case Number:e=i===null?null:Number(i);break;case Object:case Array:try{e=JSON.parse(i)}catch{e=null}}return e}},ze=(i,t)=>!$t(i,t),Ue={attribute:!0,type:String,converter:ue,reflect:!1,useDefault:!1,hasChanged:ze};Symbol.metadata??=Symbol("metadata"),re.litPropertyMetadata??=new WeakMap;var A=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=Ue){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){let s=Symbol(),r=this.getPropertyDescriptor(t,s,e);r!==void 0&&yt(this.prototype,t,r)}}static getPropertyDescriptor(t,e,s){let{get:r,set:n}=xt(this.prototype,t)??{get(){return this[e]},set(o){this[e]=o}};return{get:r,set(o){let c=r?.call(this);n?.call(this,o),this.requestUpdate(t,c,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??Ue}static _$Ei(){if(this.hasOwnProperty(q("elementProperties")))return;let t=St(this);t.finalize(),t.l!==void 0&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(q("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(q("properties"))){let e=this.properties,s=[...wt(e),...kt(e)];for(let r of s)this.createProperty(r,e[r])}let t=this[Symbol.metadata];if(t!==null){let e=litPropertyMetadata.get(t);if(e!==void 0)for(let[s,r]of e)this.elementProperties.set(s,r)}this._$Eh=new Map;for(let[e,s]of this.elementProperties){let r=this._$Eu(e,s);r!==void 0&&this._$Eh.set(r,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){let e=[];if(Array.isArray(t)){let s=new Set(t.flat(1/0).reverse());for(let r of s)e.unshift(pe(r))}else t!==void 0&&e.push(pe(t));return e}static _$Eu(t,e){let s=e.attribute;return s===!1?void 0:typeof s=="string"?s:typeof t=="string"?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),this.renderRoot!==void 0&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){let t=new Map,e=this.constructor.elementProperties;for(let s of e.keys())this.hasOwnProperty(s)&&(t.set(s,this[s]),delete this[s]);t.size>0&&(this._$Ep=t)}createRenderRoot(){let t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return Le(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,s){this._$AK(t,s)}_$ET(t,e){let s=this.constructor.elementProperties.get(t),r=this.constructor._$Eu(t,s);if(r!==void 0&&s.reflect===!0){let n=(s.converter?.toAttribute!==void 0?s.converter:ue).toAttribute(e,s.type);this._$Em=t,n==null?this.removeAttribute(r):this.setAttribute(r,n),this._$Em=null}}_$AK(t,e){let s=this.constructor,r=s._$Eh.get(t);if(r!==void 0&&this._$Em!==r){let n=s.getPropertyOptions(r),o=typeof n.converter=="function"?{fromAttribute:n.converter}:n.converter?.fromAttribute!==void 0?n.converter:ue;this._$Em=r;let c=o.fromAttribute(e,n.type);this[r]=c??this._$Ej?.get(r)??c,this._$Em=null}}requestUpdate(t,e,s,r=!1,n){if(t!==void 0){let o=this.constructor;if(r===!1&&(n=this[t]),s??=o.getPropertyOptions(t),!((s.hasChanged??ze)(n,e)||s.useDefault&&s.reflect&&n===this._$Ej?.get(t)&&!this.hasAttribute(o._$Eu(t,s))))return;this.C(t,e,s)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(t,e,{useDefault:s,reflect:r,wrapped:n},o){s&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,o??e??this[t]),n!==!0||o!==void 0)||(this._$AL.has(t)||(this.hasUpdated||s||(e=void 0),this._$AL.set(t,e)),r===!0&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}let t=this.scheduleUpdate();return t!=null&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[r,n]of this._$Ep)this[r]=n;this._$Ep=void 0}let s=this.constructor.elementProperties;if(s.size>0)for(let[r,n]of s){let{wrapped:o}=n,c=this[r];o!==!0||this._$AL.has(r)||c===void 0||this.C(r,void 0,n,c)}}let t=!1,e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(s=>s.hostUpdate?.()),this.update(e)):this._$EM()}catch(s){throw t=!1,this._$EM(),s}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(e=>e.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(e=>this._$ET(e,this[e])),this._$EM()}updated(t){}firstUpdated(t){}};A.elementStyles=[],A.shadowRootOptions={mode:"open"},A[q("elementProperties")]=new Map,A[q("finalized")]=new Map,Ct?.({ReactiveElement:A}),(re.reactiveElementVersions??=[]).push("2.1.2");var $e=globalThis,Ke=i=>i,ie=$e.trustedTypes,Ve=ie?ie.createPolicy("lit-html",{createHTML:i=>i}):void 0,We="$lit$",E=`lit$${Math.random().toFixed(9).slice(2)}$`,Ye="?"+E,Et=`<${Ye}>`,L=document,j=()=>L.createComment(""),W=i=>i===null||typeof i!="object"&&typeof i!="function",ye=Array.isArray,Pt=i=>ye(i)||typeof i?.[Symbol.iterator]=="function",_e=`[ 	
+\f\r]`,F=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,Ie=/-->/g,Be=/>/g,D=RegExp(`>|${_e}(?:([^\\s"'>=/]+)(${_e}*=${_e}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`,"g"),qe=/'/g,Fe=/"/g,Ze=/^(?:script|style|textarea|title)$/i,xe=i=>(t,...e)=>({_$litType$:i,strings:t,values:e}),l=xe(1),P=xe(2),It=xe(3),N=Symbol.for("lit-noChange"),d=Symbol.for("lit-nothing"),je=new WeakMap,R=L.createTreeWalker(L,129);function Ge(i,t){if(!ye(i)||!i.hasOwnProperty("raw"))throw Error("invalid template strings array");return Ve!==void 0?Ve.createHTML(t):t}var Ot=(i,t)=>{let e=i.length-1,s=[],r,n=t===2?"<svg>":t===3?"<math>":"",o=F;for(let c=0;c<e;c++){let a=i[c],p,u,h=-1,m=0;for(;m<a.length&&(o.lastIndex=m,u=o.exec(a),u!==null);)m=o.lastIndex,o===F?u[1]==="!--"?o=Ie:u[1]!==void 0?o=Be:u[2]!==void 0?(Ze.test(u[2])&&(r=RegExp("</"+u[2],"g")),o=D):u[3]!==void 0&&(o=D):o===D?u[0]===">"?(o=r??F,h=-1):u[1]===void 0?h=-2:(h=o.lastIndex-u[2].length,p=u[1],o=u[3]===void 0?D:u[3]==='"'?Fe:qe):o===Fe||o===qe?o=D:o===Ie||o===Be?o=F:(o=D,r=void 0);let g=o===D&&i[c+1].startsWith("/>")?" ":"";n+=o===F?a+Et:h>=0?(s.push(p),a.slice(0,h)+We+a.slice(h)+E+g):a+E+(h===-2?c:g)}return[Ge(i,n+(i[e]||"<?>")+(t===2?"</svg>":t===3?"</math>":"")),s]},Y=class i{constructor({strings:t,_$litType$:e},s){let r;this.parts=[];let n=0,o=0,c=t.length-1,a=this.parts,[p,u]=Ot(t,e);if(this.el=i.createElement(p,s),R.currentNode=this.el.content,e===2||e===3){let h=this.el.content.firstChild;h.replaceWith(...h.childNodes)}for(;(r=R.nextNode())!==null&&a.length<c;){if(r.nodeType===1){if(r.hasAttributes())for(let h of r.getAttributeNames())if(h.endsWith(We)){let m=u[o++],g=r.getAttribute(h).split(E),S=/([.?@])?(.*)/.exec(m);a.push({type:1,index:n,name:S[2],strings:g,ctor:S[1]==="."?ge:S[1]==="?"?fe:S[1]==="@"?ve:K}),r.removeAttribute(h)}else h.startsWith(E)&&(a.push({type:6,index:n}),r.removeAttribute(h));if(Ze.test(r.tagName)){let h=r.textContent.split(E),m=h.length-1;if(m>0){r.textContent=ie?ie.emptyScript:"";for(let g=0;g<m;g++)r.append(h[g],j()),R.nextNode(),a.push({type:2,index:++n});r.append(h[m],j())}}}else if(r.nodeType===8)if(r.data===Ye)a.push({type:2,index:n});else{let h=-1;for(;(h=r.data.indexOf(E,h+1))!==-1;)a.push({type:7,index:n}),h+=E.length-1}n++}}static createElement(t,e){let s=L.createElement("template");return s.innerHTML=t,s}};function z(i,t,e=i,s){if(t===N)return t;let r=s!==void 0?e._$Co?.[s]:e._$Cl,n=W(t)?void 0:t._$litDirective$;return r?.constructor!==n&&(r?._$AO?.(!1),n===void 0?r=void 0:(r=new n(i),r._$AT(i,e,s)),s!==void 0?(e._$Co??=[])[s]=r:e._$Cl=r),r!==void 0&&(t=z(i,r._$AS(i,t.values),r,s)),t}var me=class{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){let{el:{content:e},parts:s}=this._$AD,r=(t?.creationScope??L).importNode(e,!0);R.currentNode=r;let n=R.nextNode(),o=0,c=0,a=s[0];for(;a!==void 0;){if(o===a.index){let p;a.type===2?p=new Z(n,n.nextSibling,this,t):a.type===1?p=new a.ctor(n,a.name,a.strings,this,t):a.type===6&&(p=new be(n,this,t)),this._$AV.push(p),a=s[++c]}o!==a?.index&&(n=R.nextNode(),o++)}return R.currentNode=L,r}p(t){let e=0;for(let s of this._$AV)s!==void 0&&(s.strings!==void 0?(s._$AI(t,s,e),e+=s.strings.length-2):s._$AI(t[e])),e++}},Z=class i{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,s,r){this.type=2,this._$AH=d,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=s,this.options=r,this._$Cv=r?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode,e=this._$AM;return e!==void 0&&t?.nodeType===11&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=z(this,t,e),W(t)?t===d||t==null||t===""?(this._$AH!==d&&this._$AR(),this._$AH=d):t!==this._$AH&&t!==N&&this._(t):t._$litType$!==void 0?this.$(t):t.nodeType!==void 0?this.T(t):Pt(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==d&&W(this._$AH)?this._$AA.nextSibling.data=t:this.T(L.createTextNode(t)),this._$AH=t}$(t){let{values:e,_$litType$:s}=t,r=typeof s=="number"?this._$AC(t):(s.el===void 0&&(s.el=Y.createElement(Ge(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===r)this._$AH.p(e);else{let n=new me(r,this),o=n.u(this.options);n.p(e),this.T(o),this._$AH=n}}_$AC(t){let e=je.get(t.strings);return e===void 0&&je.set(t.strings,e=new Y(t)),e}k(t){ye(this._$AH)||(this._$AH=[],this._$AR());let e=this._$AH,s,r=0;for(let n of t)r===e.length?e.push(s=new i(this.O(j()),this.O(j()),this,this.options)):s=e[r],s._$AI(n),r++;r<e.length&&(this._$AR(s&&s._$AB.nextSibling,r),e.length=r)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){let s=Ke(t).nextSibling;Ke(t).remove(),t=s}}setConnected(t){this._$AM===void 0&&(this._$Cv=t,this._$AP?.(t))}},K=class{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,s,r,n){this.type=1,this._$AH=d,this._$AN=void 0,this.element=t,this.name=e,this._$AM=r,this.options=n,s.length>2||s[0]!==""||s[1]!==""?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=d}_$AI(t,e=this,s,r){let n=this.strings,o=!1;if(n===void 0)t=z(this,t,e,0),o=!W(t)||t!==this._$AH&&t!==N,o&&(this._$AH=t);else{let c=t,a,p;for(t=n[0],a=0;a<n.length-1;a++)p=z(this,c[s+a],e,a),p===N&&(p=this._$AH[a]),o||=!W(p)||p!==this._$AH[a],p===d?t=d:t!==d&&(t+=(p??"")+n[a+1]),this._$AH[a]=p}o&&!r&&this.j(t)}j(t){t===d?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}},ge=class extends K{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===d?void 0:t}},fe=class extends K{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==d)}},ve=class extends K{constructor(t,e,s,r,n){super(t,e,s,r,n),this.type=5}_$AI(t,e=this){if((t=z(this,t,e,0)??d)===N)return;let s=this._$AH,r=t===d&&s!==d||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,n=t!==d&&(s===d||r);r&&this.element.removeEventListener(this.name,this,s),n&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}},be=class{constructor(t,e,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(t){z(this,t)}};var Ht=$e.litHtmlPolyfillSupport;Ht?.(Y,Z),($e.litHtmlVersions??=[]).push("3.3.3");var Je=(i,t,e)=>{let s=e?.renderBefore??t,r=s._$litPart$;if(r===void 0){let n=e?.renderBefore??null;s._$litPart$=r=new Z(t.insertBefore(j(),n),n,void 0,e??{})}return r._$AI(i),r};var we=globalThis,f=class extends A{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){let e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=Je(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return N}};f._$litElement$=!0,f.finalized=!0,we.litElementHydrateSupport?.({LitElement:f});var Mt=we.litElementPolyfillSupport;Mt?.({LitElement:f});(we.litElementVersions??=[]).push("4.2.2");var C=(i,t,e={})=>i.connection.sendMessagePromise({type:`charge_board/${t}`,...e}),O=i=>C(i,"overview"),ne=(i,t={})=>C(i,"sessions",{...t}),Xe=(i,t)=>C(i,"session",{session_id:t}),Qe=(i,t,e)=>C(i,"set_vehicle",{session_id:t,vehicle_id:e}),et=(i,t)=>C(i,"delete",{session_id:t}),ke=(i,t,e)=>C(i,"merge",{session_id:t,other_id:e}),tt=(i,t,e)=>C(i,"split",{session_id:t,at:e}),st=(i,t,e)=>C(i,"stats",{year:t,...e&&{vehicle_id:e}}),rt=(i,t)=>C(i,"vehicle",{vehicle_id:t});async function it(i,t,e,s){return((await i.connection.sendMessagePromise({type:"recorder/statistics_during_period",start_time:new Date(e*1e3).toISOString(),end_time:new Date(s*1e3).toISOString(),statistic_ids:[t],period:"hour",types:["mean"]}))[t]??[]).filter(n=>n.mean!=null).map(n=>({t:(typeof n.start=="number"?n.start:Date.parse(n.start))/1e3,v:n.mean}))}var nt=(i,t)=>i.connection.subscribeMessage(t,{type:"charge_board/subscribe"});var Tt={title:"Recharge",tab_overview:"Aper\xE7u",tab_sessions:"Sessions",loading:"Chargement\u2026",error:"Impossible de charger les donn\xE9es",not_loaded:"Charge Board n'est pas charg\xE9",no_chargers:"Aucun chargeur configur\xE9. Ajoutez-en un dans les param\xE8tres de l'int\xE9gration Charge Board.",charging:"En charge",plugged:"Branch\xE9",free:"Libre",power:"puissance",session:"session",cost:"co\xFBt",end:"fin estim\xE9e",end_short:"fin {time}",plugged_since:"Branch\xE9e depuis {time}",charging_since:"en charge depuis {time}",charge_started:"d\xE9but de charge {time}",off_peak:"{share} heures creuses",last_session:"Derni\xE8re session : {summary}",no_session:"Aucune session enregistr\xE9e",no_vehicle:"aucun v\xE9hicule",menu:"Menu",close:"Fermer",all_vehicles:"Tous les v\xE9hicules",all_chargers:"Tous les chargeurs",month:"Mois",sessions_count:"{n} sessions",off_peak_short:"{share} HC",col_start:"D\xE9but",col_end:"Fin",col_vehicle:"V\xE9hicule",col_battery:"Batterie",col_kwh:"kWh",col_duration:"Dur\xE9e de charge",col_cost:"Co\xFBt",edited:"modifi\xE9e",estimated_note:"* co\xFBt estim\xE9",unpriced_note:"\u2265 : {n} session(s) sans prix",no_sessions:"Aucune session pour ces filtres",back:"Retour",session_of:"Session du {day}",energy:"\xE9nergie",battery:"batterie",average:"moyenne",chart_hint:"Touchez le graphique pour choisir o\xF9 couper la session.",plugged_at:"Branch\xE9e",charge:"Charge",unplugged_at:"D\xE9branch\xE9e",off_peak_slice:"Heures creuses",peak_slice:"Heures pleines",price_slice:"{price} /kWh",unknown_price:"Prix inconnu",charging_time:"Temps de charge",plugged_time:"{time} branch\xE9e",vehicle:"V\xE9hicule",delete:"Supprimer",merge_prev:"Fusionner avec la pr\xE9c\xE9dente",merge_next:"Fusionner avec la suivante",split:"Couper",confirm_delete:"Supprimer d\xE9finitivement cette session ?",confirm_split:"Couper la session \xE0 {time} ?",confirm:"Confirmer",cancel:"Annuler",in_progress_note:"Session en cours : corrections impossibles.",err_invalid:"Correction refus\xE9e : op\xE9ration invalide pour cette session.",err_in_progress:"Correction refus\xE9e : la session est encore en cours.",err_not_found:"Cette session n'existe plus.",tab_vehicles:"V\xE9hicules",tab_stats:"Statistiques",year:"Ann\xE9e",current_month:"{month} (en cours)",vs_prev:"vs mois pr\xE9c\xE9dent",sessions_n:"{n} sessions",off_peak_label:"heures creuses",per_100km:"aux 100 km",km_n:"{km} km",vs_petrol:"vs essence",petrol_ref:"{l100} L/100 \xB7 {price}/L",cost_by_month:"Co\xFBt par mois",col_month:"Mois",col_sessions:"Sessions",col_hc:"HC",col_km:"km",col_per_100:"\u20AC/100 km",col_vs_petrol:"vs essence",col_kwh_100:"kWh/100 km",total_year:"Total {year}",km_note:"* km incomplets (compteur pas encore suivi au d\xE9but du mois) : pas de co\xFBt aux 100 km ni de comparaison.",stats_settings_note:"Kilom\xE9trage et consommation essence de r\xE9f\xE9rence dans la fiche du v\xE9hicule ; prix de l'essence dans les options de Charge Board.",no_vehicles:"Aucun v\xE9hicule configur\xE9.",battery_now:"batterie",target_n:"objectif {n} %",consumption_30d:"aux 100 km (30 j)",odometer:"compteur",autonomy:"autonomie estim\xE9e",battery_30d:"Batterie sur 30 jours",recharges:"recharges",consumption_by_month:"Consommation par mois (\xE9nergie recharg\xE9e \xF7 km)",consumption_since:"Depuis la derni\xE8re recharge : {value} kWh/100 km (c\xF4t\xE9 batterie)",configuration:"Configuration",edit:"Modifier",cfg_soc_entity:"Batterie",cfg_target:"Objectif",cfg_odometer_entity:"Kilom\xE9trage",cfg_fuel_price:"Prix de l'essence",cfg_fuel_l100:"Essence de r\xE9f\xE9rence",cfg_capacity:"Capacit\xE9",target_vehicle:"fix\xE9 par le v\xE9hicule",target_home:"maison : Charge Board coupe la charge",cut_ignored:"Objectif maison sans effet : aucun chargeur n'a \xE0 la fois une entit\xE9 de branchement et un interrupteur.",fixed_value:"valeur fixe"},Dt={title:"Charging",tab_overview:"Overview",tab_sessions:"Sessions",loading:"Loading\u2026",error:"Could not load the data",not_loaded:"Charge Board is not loaded",no_chargers:"No charger configured. Add one in the Charge Board integration settings.",charging:"Charging",plugged:"Plugged in",free:"Free",power:"power",session:"session",cost:"cost",end:"estimated end",end_short:"end {time}",plugged_since:"Plugged in since {time}",charging_since:"charging since {time}",charge_started:"charge started {time}",off_peak:"{share} off-peak",last_session:"Last session: {summary}",no_session:"No session recorded",no_vehicle:"no vehicle",menu:"Menu",close:"Close",all_vehicles:"All vehicles",all_chargers:"All chargers",month:"Month",sessions_count:"{n} sessions",off_peak_short:"{share} off-peak",col_start:"Start",col_end:"End",col_vehicle:"Vehicle",col_battery:"Battery",col_kwh:"kWh",col_duration:"Charging time",col_cost:"Cost",edited:"edited",estimated_note:"* estimated cost",unpriced_note:"\u2265: {n} session(s) without a price",no_sessions:"No session for these filters",back:"Back",session_of:"Session of {day}",energy:"energy",battery:"battery",average:"average",chart_hint:"Tap the chart to choose where to split the session.",plugged_at:"Plugged in",charge:"Charge",unplugged_at:"Unplugged",off_peak_slice:"Off-peak",peak_slice:"Peak",price_slice:"{price} /kWh",unknown_price:"Unknown price",charging_time:"Charging time",plugged_time:"{time} plugged in",vehicle:"Vehicle",delete:"Delete",merge_prev:"Merge with previous",merge_next:"Merge with next",split:"Split",confirm_delete:"Delete this session permanently?",confirm_split:"Split the session at {time}?",confirm:"Confirm",cancel:"Cancel",in_progress_note:"Session in progress: no corrections.",err_invalid:"Correction refused: invalid operation for this session.",err_in_progress:"Correction refused: the session is still in progress.",err_not_found:"This session no longer exists.",tab_vehicles:"Vehicles",tab_stats:"Statistics",year:"Year",current_month:"{month} (in progress)",vs_prev:"vs previous month",sessions_n:"{n} sessions",off_peak_label:"off-peak",per_100km:"per 100 km",km_n:"{km} km",vs_petrol:"vs petrol",petrol_ref:"{l100} L/100 \xB7 {price}/L",cost_by_month:"Cost per month",col_month:"Month",col_sessions:"Sessions",col_hc:"Off-peak",col_km:"km",col_per_100:"/100 km",col_vs_petrol:"vs petrol",col_kwh_100:"kWh/100 km",total_year:"Total {year}",km_note:"* incomplete km (odometer not yet tracked at the start of the month): no cost per 100 km nor comparison.",stats_settings_note:"Odometer and reference petrol consumption in the vehicle settings; petrol price in the Charge Board options.",no_vehicles:"No vehicle configured.",battery_now:"battery",target_n:"target {n}%",consumption_30d:"per 100 km (30 d)",odometer:"odometer",autonomy:"estimated range",battery_30d:"Battery over 30 days",recharges:"charges",consumption_by_month:"Consumption per month (energy charged \xF7 km)",consumption_since:"Since the last charge: {value} kWh/100 km (battery side)",configuration:"Settings",edit:"Edit",cfg_soc_entity:"Battery",cfg_target:"Target",cfg_odometer_entity:"Odometer",cfg_fuel_price:"Petrol price",cfg_fuel_l100:"Reference petrol car",cfg_capacity:"Capacity",target_vehicle:"set by the vehicle",target_home:"home: Charge Board stops the charge",cut_ignored:"Home target has no effect: no charger has both a plug entity and a switch.",fixed_value:"fixed value"},Rt={fr:Tt,en:Dt},y=i=>i.language?.startsWith("fr")?"fr":"en",v=i=>i.locale?.language??i.language??"en";function x(i,t,e={}){return Rt[i][t].replace(/\{(\w+)\}/g,(s,r)=>e[r]??"")}function k(i){let t=i?.code;return t==="not_loaded"?"not_loaded":t==="invalid"||t==="in_progress"||t==="not_found"?`err_${t}`:"error"}var Se=i=>i.replace(/[  ]/g," "),ot=(i,t,e)=>Se(i.toLocaleString(t,{minimumFractionDigits:e,maximumFractionDigits:e}));function w(i,t){return i==null?"\u2014":`${ot(i,t,1)} kWh`}function V(i,t){return i==null?"\u2014":`${ot(i/1e3,t,1)} kW`}function b(i,t,e){return i==null?"\u2014":Se(new Intl.NumberFormat(e,{style:"currency",currency:t}).format(i))}function G(i,t){let e=Math.round(i/60),s=Math.floor(e/60),r=e%60;if(s===0)return`${r} min`;let n=String(r).padStart(2,"0");return t==="fr"?`${s} h ${n}`:`${s} h ${n} min`}function I(i,t){if(i==null&&t==null)return"\u2014";let e=s=>s==null?"\u2014":String(Math.round(s));return`${e(i)} \u2192 ${e(t)} %`}function M(i,t){return Se(i.toLocaleString(t,{style:"percent",maximumFractionDigits:0}))}var oe=(i,t,e,s)=>new Intl.DateTimeFormat(t,{timeZone:e,...s}).format(new Date(i*1e3));function U(i,t,e){return oe(i,t,e,{hour:"2-digit",minute:"2-digit"})}function H(i,t,e){return oe(i,t,e,{day:"2-digit",month:"2-digit"})}function J(i,t,e,s=Date.now()/1e3){let r=U(i,t,e),n=H(i,t,e);return n===H(s,t,e)?r:`${n} ${r}`}function ae(i,t,e){return`${oe(i,t,e,{weekday:"short"})} ${H(i,t,e)} ${U(i,t,e)}`}function X(i,t){return oe(i,"en-CA",t,{year:"numeric",month:"2-digit"})}function at(i,t){return`${i<0?"\u25BC":"\u25B2"} ${M(Math.abs(i),t)}`}var ct={charging:"var(--success-color, #43a047)",plugged:"var(--info-color, #039be5)",free:"var(--disabled-text-color, #9e9e9e)"},Ae=class extends f{constructor(){super(...arguments);this.version=0;this._req=0}static{this.properties={hass:{attribute:!1},version:{type:Number},_data:{state:!0},_error:{state:!0},_open:{state:!0}}}updated(e){e.has("version")&&this.hass&&this._fetch(),e.has("_open")&&this._open&&this.renderRoot.querySelector("dialog")?.showModal()}async _fetch(){let e=++this._req;try{let s=await O(this.hass);if(e!==this._req)return;this._data=s,this._error=void 0}catch(s){e===this._req&&(this._error=k(s))}}_t(e,s){return x(y(this.hass),e,s)}render(){if(this._error)return l`<p class="message">${this._t(this._error)}</p>`;if(!this._data)return l`<p class="message">${this._t("loading")}</p>`;let{chargers:e,style:s}=this._data;if(!e.length)return l`<p class="message">${this._t("no_chargers")}</p>`;if(s!=="compact")return l`<div class="grid">${e.map(n=>this._card(n))}</div>`;let r=e.find(n=>n.id===this._open);return l`
       <div class="grid compact">${e.map(n=>this._tile(n))}</div>
       ${r?l`<dialog @close=${()=>this._open=void 0} @click=${this._backdropClose}>
             <div class="dialog-bar">
               <button aria-label=${this._t("close")} @click=${this._close}>×</button>
             </div>
             ${this._card(r)}
-          </dialog>`:h}
-    `}_backdropClose(e){e.target===e.currentTarget&&this._close()}_close(){this.renderRoot.querySelector("dialog")?.close()}get _fmt(){let e=y(this.hass),s=this.hass.config.time_zone;return{locale:e,when:r=>W(r,e,s),time:r=>T(r,e,s),day:r=>q(r,e,s),cost:r=>O(r,this._data.currency,e)}}_stateLabel(e){return this._t(e.state)}_idle(e){return e.state==="free"&&!e.session}_card(e){let s=this._fmt,r=e.session,n=e.vehicle?.soc??null,o=r?[r.plugged_at!=null?this._t("plugged_since",{time:s.when(r.plugged_at)}):null,r.charge_start!=null?this._t(e.state==="charging"?"charging_since":"charge_started",{time:s.when(r.charge_start)}):null,r.has_off_peak_source&&r.energy_kwh>0?this._t("off_peak",{share:se(r.off_peak.kwh/r.energy_kwh,s.locale)}):null].filter(Boolean):[];return l`
-      <ha-card class="card" style="--state:${Ge[e.state]}">
+          </dialog>`:d}
+    `}_backdropClose(e){e.target===e.currentTarget&&this._close()}_close(){this.renderRoot.querySelector("dialog")?.close()}get _fmt(){let e=v(this.hass),s=this.hass.config.time_zone;return{locale:e,when:r=>J(r,e,s),time:r=>U(r,e,s),day:r=>H(r,e,s),cost:r=>b(r,this._data.currency,e)}}_stateLabel(e){return this._t(e.state)}_idle(e){return e.state==="free"&&!e.session}_card(e){let s=this._fmt,r=e.session,n=e.vehicle?.soc??null,o=r?[r.plugged_at!=null?this._t("plugged_since",{time:s.when(r.plugged_at)}):null,r.charge_start!=null?this._t(e.state==="charging"?"charging_since":"charge_started",{time:s.when(r.charge_start)}):null,r.has_off_peak_source&&r.energy_kwh>0?this._t("off_peak",{share:M(r.off_peak.kwh/r.energy_kwh,s.locale)}):null].filter(Boolean):[];return l`
+      <ha-card class="card" style="--state:${ct[e.state]}">
         <div class="head">
           <span class="name"><ha-icon icon="mdi:ev-station"></ha-icon>${e.name}</span>
           <span class="state">${this._stateLabel(e)}</span>
@@ -18,20 +18,20 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
               <div class="vehicle">
                 <ha-icon icon="mdi:car-electric"></ha-icon>
                 <b>${e.vehicle?.name??"\u2014"}</b> ·
-                ${n==null?"\u2014":L(n,e.vehicle?.target)}
+                ${n==null?"\u2014":I(n,e.vehicle?.target)}
               </div>
-              ${n==null?h:l`<div class="bar"><div style="width:${Math.min(100,Math.max(0,n))}%"></div></div>`}
+              ${n==null?d:l`<div class="bar"><div style="width:${Math.min(100,Math.max(0,n))}%"></div></div>`}
               <div class="stats">
-                ${this._stat(U(e.power_w,s.locale),"power")}
-                ${this._stat(k(r?.energy_kwh,s.locale),"session")}
+                ${this._stat(V(e.power_w,s.locale),"power")}
+                ${this._stat(w(r?.energy_kwh,s.locale),"session")}
                 ${this._stat(s.cost(r?.cost),"cost")}
-                ${e.estimated_end==null?h:this._stat(s.time(e.estimated_end),"end")}
+                ${e.estimated_end==null?d:this._stat(s.time(e.estimated_end),"end")}
               </div>
-              ${o.length?l`<div class="muted">${o.join(" \xB7 ")}</div>`:h}
+              ${o.length?l`<div class="muted">${o.join(" \xB7 ")}</div>`:d}
             `}
       </ha-card>
-    `}_stat(e,s){return l`<div><div class="value">${e}</div><div class="muted">${this._t(s)}</div></div>`}_lastSession(e){let s=e.last_session;if(!s)return this._t("no_session");let r=this._fmt,n=s.charge_start??s.plugged_at,o=[s.vehicle_name??"\u2014",n!=null?r.day(n):null,k(s.energy_kwh,r.locale),r.cost(s.cost)].filter(Boolean);return this._t("last_session",{summary:o.join(" \xB7 ")})}_tile(e){let s=this._fmt,r=this._idle(e)?null:e.vehicle?.soc??null,n=r==null?"0":String(Math.min(100,Math.max(0,r))),o=this._idle(e)?this._t("free").toLowerCase():r==null?"\u2014":`${Math.round(r)} %`,c=[U(e.power_w,s.locale),s.cost(e.session?.cost),e.estimated_end==null?null:this._t("end_short",{time:s.time(e.estimated_end)})].filter(Boolean);return l`
-      <ha-card class="tile" style="--state:${Ge[e.state]}">
+    `}_stat(e,s){return l`<div><div class="value">${e}</div><div class="muted">${this._t(s)}</div></div>`}_lastSession(e){let s=e.last_session;if(!s)return this._t("no_session");let r=this._fmt,n=s.charge_start??s.plugged_at,o=[s.vehicle_name??"\u2014",n!=null?r.day(n):null,w(s.energy_kwh,r.locale),r.cost(s.cost)].filter(Boolean);return this._t("last_session",{summary:o.join(" \xB7 ")})}_tile(e){let s=this._fmt,r=this._idle(e)?null:e.vehicle?.soc??null,n=r==null?"0":String(Math.min(100,Math.max(0,r))),o=this._idle(e)?this._t("free").toLowerCase():r==null?"\u2014":`${Math.round(r)} %`,c=[V(e.power_w,s.locale),s.cost(e.session?.cost),e.estimated_end==null?null:this._t("end_short",{time:s.time(e.estimated_end)})].filter(Boolean);return l`
+      <ha-card class="tile" style="--state:${ct[e.state]}">
         <button @click=${()=>this._open=e.id}>
           <div class="gauge" style="--soc:${n}%"><span>${o}</span></div>
           <b>${e.name}</b>
@@ -41,7 +41,7 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
               `}
         </button>
       </ha-card>
-    `}static{this.styles=b`
+    `}static{this.styles=$`
     :host {
       display: block;
       padding: 16px;
@@ -190,57 +190,57 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
       padding: 4px 8px;
       color: #fff;
     }
-  `}};customElements.define("charge-board-overview",ye);function Ye(i,t,e,s){return e+Math.min(Math.max(i,0),t)/t*(s-e)}var vt=360,Ze=(i,t,e)=>Math.max(Math.min(t+1<i.length?i[t+1].t:e,i[t].t+vt),i[t].t),Qe=i=>Math.round(i*10)/10;function et(i,t,e,s=i[0]?.t??0,r=i[i.length-1]?.t??0){if(!i.length)return"";let n=Math.max(...i.map(d=>d.w),1),o=r-s||1,c=d=>Qe((d-s)/o*t),a=d=>Qe(e-Math.max(d,0)/n*e);return i.map((d,u)=>{let g=Ze(i,u,r),_=u+1<i.length?i[u+1].t:r,A=`${u?"L":"M"}${c(d.t)} ${a(d.w)} L${c(g)} ${a(d.w)}`;return g<_?`${A} L${c(g)} ${a(0)} L${c(_)} ${a(0)}`:A}).join(" ")}function tt(i,t){let e=[];return i.forEach((s,r)=>{if(!s.off_peak)return;let n=Ze(i,r,t),o=e[e.length-1];o&&o.to===s.t?o.to=n:e.push({from:s.t,to:n})}),e}var ne=600,J=160,xe=class extends m{constructor(){super(...arguments);this.version=0;this.currency="EUR";this.vehicles=[];this._busy=!1;this._req=0}static{this.properties={hass:{attribute:!1},sessionId:{attribute:!1},version:{type:Number},currency:{attribute:!1},vehicles:{attribute:!1},_s:{state:!0},_prev:{state:!0},_next:{state:!0},_pending:{state:!0},_busy:{state:!0}}}updated(e){e.has("sessionId")&&(this._s=void 0,this._pending=void 0),(e.has("sessionId")||e.has("version"))&&this.hass&&this._fetch()}async _fetch(){let e=++this._req;try{let s=await Be(this.hass,this.sessionId),{sessions:r}=await te(this.hass,{charger_id:s.charger_id});if(e!==this._req)return;let n=a=>a.charge_start??a.plugged_at??0,o=[...r].sort((a,p)=>n(a)-n(p)),c=o.findIndex(a=>a.id===s.id);this._prev=c>0?o[c-1].id:void 0,this._next=c>=0&&c+1<o.length?o[c+1].id:void 0,this._s=s}catch(s){e===this._req&&this._emit("session-changed",{id:void 0,error:M(s)})}}_emit(e,s){this.dispatchEvent(new CustomEvent(e,{detail:s,bubbles:!0,composed:!0}))}async _run(e){this._pending=void 0,this._busy=!0;try{let{sessions:s}=await e();this._emit("session-changed",{id:s[0]}),s[0]===this.sessionId&&this._fetch()}catch(s){let r=M(s);this._emit("session-changed",{id:r==="err_not_found"?void 0:this.sessionId,error:r}),this._fetch()}finally{this._busy=!1}}_t(e,s){return w(v(this.hass),e,s)}get _range(){let e=this._s,s=e.charge_start??e.curve[0]?.t??0;return{start:s,end:Math.max(e.charge_end??s,s+1)}}_chartClick(e){if(this._s.open)return;let r=e.currentTarget.getBoundingClientRect(),{start:n,end:o}=this._range,c=Math.round(Ye(e.clientX-r.left,r.width,n,o));n<c&&c<o&&(this._pending={kind:"split",at:c})}render(){if(!this._s)return l`<div class="card"><p class="muted">${this._t("loading")}</p></div>`;let e=this._s,s=y(this.hass),r=this.hass.config.time_zone,n=e.charge_start??void 0,o=g=>g==null?"\u2014":W(g,s,r,n),c=g=>O(g,this.currency,s),a=e.charging_s>0?e.energy_kwh*36e5/e.charging_s:null,p=e.plugged_at!=null&&e.unplugged_at!=null?e.unplugged_at-e.plugged_at:null,d=v(this.hass),u=[e.charge_start!=null?this._t("session_of",{day:ie(e.charge_start,s,r)}):null,e.vehicle_name,e.charger_name].filter(Boolean);return l`
+  `}};customElements.define("charge-board-overview",Ae);function lt(i,t,e,s){return e+Math.min(Math.max(i,0),t)/t*(s-e)}var Lt=360,ht=(i,t,e)=>Math.max(Math.min(t+1<i.length?i[t+1].t:e,i[t].t+Lt),i[t].t),T=i=>Math.round(i*10)/10;function dt(i,t,e,s=i[0]?.t??0,r=i[i.length-1]?.t??0){if(!i.length)return"";let n=Math.max(...i.map(u=>u.w),1),o=r-s||1,c=u=>T((u-s)/o*t),a=u=>T(e-Math.max(u,0)/n*e);return i.map((u,h)=>{let m=ht(i,h,r),g=h+1<i.length?i[h+1].t:r,S=`${h?"L":"M"}${c(u.t)} ${a(u.w)} L${c(m)} ${a(u.w)}`;return m<g?`${S} L${c(m)} ${a(0)} L${c(g)} ${a(0)}`:S}).join(" ")}function pt(i,t){let e=[];return i.forEach((s,r)=>{if(!s.off_peak)return;let n=ht(i,r,t),o=e[e.length-1];o&&o.to===s.t?o.to=n:e.push({from:s.t,to:n})}),e}function ut(i,t){let e=Math.max(...i.map(r=>r.off_peak_cost+r.peak_cost),0)||1,s=100/(i.length||1);return i.map((r,n)=>({x:T(n*s+s*.15),w:T(s*.7),hOff:T(r.off_peak_cost/e*t),hPeak:T(r.peak_cost/e*t)}))}function _t(i,t,e,s,r,n=100){if(!i.length)return"";let o=r-s||1;return i.map((c,a)=>`${a?"L":"M"}${T((c.t-s)/o*t)} ${T(e-c.v/n*e)}`).join(" ")}var ce=600,Q=160,Ce=class extends f{constructor(){super(...arguments);this.version=0;this.currency="EUR";this.vehicles=[];this._busy=!1;this._req=0}static{this.properties={hass:{attribute:!1},sessionId:{attribute:!1},version:{type:Number},currency:{attribute:!1},vehicles:{attribute:!1},_s:{state:!0},_prev:{state:!0},_next:{state:!0},_pending:{state:!0},_busy:{state:!0}}}updated(e){e.has("sessionId")&&(this._s=void 0,this._pending=void 0),(e.has("sessionId")||e.has("version"))&&this.hass&&this._fetch()}async _fetch(){let e=++this._req;try{let s=await Xe(this.hass,this.sessionId),{sessions:r}=await ne(this.hass,{charger_id:s.charger_id});if(e!==this._req)return;let n=a=>a.charge_start??a.plugged_at??0,o=[...r].sort((a,p)=>n(a)-n(p)),c=o.findIndex(a=>a.id===s.id);this._prev=c>0?o[c-1].id:void 0,this._next=c>=0&&c+1<o.length?o[c+1].id:void 0,this._s=s}catch(s){e===this._req&&this._emit("session-changed",{id:void 0,error:k(s)})}}_emit(e,s){this.dispatchEvent(new CustomEvent(e,{detail:s,bubbles:!0,composed:!0}))}async _run(e){this._pending=void 0,this._busy=!0;try{let{sessions:s}=await e();this._emit("session-changed",{id:s[0]}),s[0]===this.sessionId&&this._fetch()}catch(s){let r=k(s);this._emit("session-changed",{id:r==="err_not_found"?void 0:this.sessionId,error:r}),this._fetch()}finally{this._busy=!1}}_t(e,s){return x(y(this.hass),e,s)}get _range(){let e=this._s,s=e.charge_start??e.curve[0]?.t??0;return{start:s,end:Math.max(e.charge_end??s,s+1)}}_chartClick(e){if(this._s.open)return;let r=e.currentTarget.getBoundingClientRect(),{start:n,end:o}=this._range,c=Math.round(lt(e.clientX-r.left,r.width,n,o));n<c&&c<o&&(this._pending={kind:"split",at:c})}render(){if(!this._s)return l`<div class="card"><p class="muted">${this._t("loading")}</p></div>`;let e=this._s,s=v(this.hass),r=this.hass.config.time_zone,n=e.charge_start??void 0,o=m=>m==null?"\u2014":J(m,s,r,n),c=m=>b(m,this.currency,s),a=e.charging_s>0?e.energy_kwh*36e5/e.charging_s:null,p=e.plugged_at!=null&&e.unplugged_at!=null?e.unplugged_at-e.plugged_at:null,u=y(this.hass),h=[e.charge_start!=null?this._t("session_of",{day:ae(e.charge_start,s,r)}):null,e.vehicle_name,e.charger_name].filter(Boolean);return l`
       <div class="card">
         <button class="back" @click=${()=>this._emit("back")}>← ${this._t("back")}</button>
         <div class="head">
-          <b>${u.join(" \xB7 ")}</b>
-          ${e.edited?l`<span class="badge">${this._t("edited")}</span>`:h}
+          <b>${h.join(" \xB7 ")}</b>
+          ${e.edited?l`<span class="badge">${this._t("edited")}</span>`:d}
         </div>
         <div class="figures">
-          ${this._figure(k(e.energy_kwh,s),"energy")}
+          ${this._figure(w(e.energy_kwh,s),"energy")}
           ${this._figure(`${c(e.cost)}${e.estimated?" *":""}`,"cost")}
-          ${this._figure(L(e.soc_start,e.soc_end),"battery")}
-          ${this._figure(U(a,s),"average")}
+          ${this._figure(I(e.soc_start,e.soc_end),"battery")}
+          ${this._figure(V(a,s),"average")}
         </div>
         ${this._chart()}
         <table class="facts">
           <tr><td>${this._t("plugged_at")}</td><td>${o(e.plugged_at)}</td></tr>
           <tr><td>${this._t("charge")}</td><td>${o(e.charge_start)} → ${o(e.charge_end)}</td></tr>
           <tr><td>${this._t("unplugged_at")}</td><td>${o(e.unplugged_at)}</td></tr>
-          ${this._slices(s).map(([g,_])=>l`<tr><td>${g}</td><td>${k(_.kwh,s)} · ${c(_.cost)}</td></tr>`)}
+          ${this._slices(s).map(([m,g])=>l`<tr><td>${m}</td><td>${w(g.kwh,s)} · ${c(g.cost)}</td></tr>`)}
           <tr>
             <td>${this._t("charging_time")}</td>
             <td>
-              ${F(e.charging_s,d)}
-              ${p==null?h:l` / ${this._t("plugged_time",{time:F(p,d)})}`}
+              ${G(e.charging_s,u)}
+              ${p==null?d:l` / ${this._t("plugged_time",{time:G(p,u)})}`}
             </td>
           </tr>
         </table>
         ${e.open?l`<p class="muted">${this._t("in_progress_note")}</p>`:this._actions()}
       </div>
-    `}_figure(e,s){return l`<div><div class="value">${e}</div><div class="muted">${this._t(s)}</div></div>`}_slices(e){let s=this._s;return s.has_off_peak_source?[[this._t("off_peak_slice"),s.off_peak],[this._t("peak_slice"),s.peak]]:Object.entries(s.by_price).map(([r,n])=>[r==="none"?this._t("unknown_price"):this._t("price_slice",{price:new Intl.NumberFormat(e,{style:"currency",currency:this.currency,maximumFractionDigits:4}).format(Number(r))}),n])}_chart(){let e=this._s,{start:s,end:r}=this._range,n=d=>(d-s)/(r-s)*ne,o=y(this.hass),c=this.hass.config.time_zone,a=Math.max(0,...e.curve.map(d=>d.w)),p=this._pending?.kind==="split"?this._pending.at:void 0;return l`
+    `}_figure(e,s){return l`<div><div class="value">${e}</div><div class="muted">${this._t(s)}</div></div>`}_slices(e){let s=this._s;return s.has_off_peak_source?[[this._t("off_peak_slice"),s.off_peak],[this._t("peak_slice"),s.peak]]:Object.entries(s.by_price).map(([r,n])=>[r==="none"?this._t("unknown_price"):this._t("price_slice",{price:new Intl.NumberFormat(e,{style:"currency",currency:this.currency,maximumFractionDigits:4}).format(Number(r))}),n])}_chart(){let e=this._s,{start:s,end:r}=this._range,n=u=>(u-s)/(r-s)*ce,o=v(this.hass),c=this.hass.config.time_zone,a=Math.max(0,...e.curve.map(u=>u.w)),p=this._pending?.kind==="split"?this._pending.at:void 0;return l`
       <svg
         class="chart ${e.open?"":"clickable"}"
-        viewBox="0 0 ${ne} ${J}"
+        viewBox="0 0 ${ce} ${Q}"
         preserveAspectRatio="none"
         role="img"
         @click=${this._chartClick}
       >
-        ${e.has_off_peak_source?Z`<rect class="peak" x="0" y="0" width=${ne} height=${J}></rect>
-              ${tt(e.curve,r).map(d=>Z`<rect class="off-peak" x=${n(d.from)} y="0" width=${n(d.to)-n(d.from)} height=${J}></rect>`)}`:h}
-        <path class="line" d=${et(e.curve,ne,J-4,s,r)} transform="translate(0 4)"></path>
-        ${p==null?h:Z`<line class="cut" x1=${n(p)} x2=${n(p)} y1="0" y2=${J}></line>`}
+        ${e.has_off_peak_source?P`<rect class="peak" x="0" y="0" width=${ce} height=${Q}></rect>
+              ${pt(e.curve,r).map(u=>P`<rect class="off-peak" x=${n(u.from)} y="0" width=${n(u.to)-n(u.from)} height=${Q}></rect>`)}`:d}
+        <path class="line" d=${dt(e.curve,ce,Q-4,s,r)} transform="translate(0 4)"></path>
+        ${p==null?d:P`<line class="cut" x1=${n(p)} x2=${n(p)} y1="0" y2=${Q}></line>`}
       </svg>
       <div class="axis muted">
-        <span>${T(s,o,c)}</span>
-        <span>${a?`max ${U(a,o)}`:""}</span>
-        <span>${T(r,o,c)}</span>
+        <span>${U(s,o,c)}</span>
+        <span>${a?`max ${V(a,o)}`:""}</span>
+        <span>${U(r,o,c)}</span>
       </div>
       ${e.has_off_peak_source?l`<div class="legend muted">
             <span><i class="off-peak"></i>${this._t("off_peak_slice")}</span>
             <span><i class="peak"></i>${this._t("peak_slice")}</span>
-          </div>`:h}
+          </div>`:d}
     `}_actions(){let e=this._s,s=e.id,r=this._pending,n=this.hass.config.time_zone,o=(c,a)=>l`
       <div class="confirm">
         <span>${c}</span>
@@ -249,28 +249,28 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
       </div>
     `;return l`
       <p class="muted">${this._t("chart_hint")}</p>
-      ${r?.kind==="split"?o(this._t("confirm_split",{time:W(r.at,y(this.hass),n,e.charge_start??void 0)}),()=>Fe(this.hass,s,r.at)):h}
-      ${r?.kind==="delete"?o(this._t("confirm_delete"),()=>qe(this.hass,s)):h}
+      ${r?.kind==="split"?o(this._t("confirm_split",{time:J(r.at,v(this.hass),n,e.charge_start??void 0)}),()=>tt(this.hass,s,r.at)):d}
+      ${r?.kind==="delete"?o(this._t("confirm_delete"),()=>et(this.hass,s)):d}
       <div class="actions">
         <label>
           ${this._t("vehicle")}
           <select
             ?disabled=${this._busy}
-            @change=${c=>{let a=c.target,p=a.value;a.value=e.vehicle_id??"",p&&p!==e.vehicle_id&&this._run(()=>Ke(this.hass,s,p))}}
+            @change=${c=>{let a=c.target,p=a.value;a.value=e.vehicle_id??"",p&&p!==e.vehicle_id&&this._run(()=>Qe(this.hass,s,p))}}
           >
-            ${e.vehicle_id==null?l`<option value="" selected>${"\u2014"}</option>`:h}
+            ${e.vehicle_id==null?l`<option value="" selected>${"\u2014"}</option>`:d}
             ${this.vehicles.map(c=>l`<option value=${c.id} .selected=${c.id===e.vehicle_id}>${c.name}</option>`)}
           </select>
         </label>
         <button
           ?disabled=${this._busy||!this._prev}
-          @click=${()=>this._run(()=>be(this.hass,s,this._prev))}
+          @click=${()=>this._run(()=>ke(this.hass,s,this._prev))}
         >
           ${this._t("merge_prev")}
         </button>
         <button
           ?disabled=${this._busy||!this._next}
-          @click=${()=>this._run(()=>be(this.hass,s,this._next))}
+          @click=${()=>this._run(()=>ke(this.hass,s,this._next))}
         >
           ${this._t("merge_next")}
         </button>
@@ -278,7 +278,7 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
           ${this._t("delete")}
         </button>
       </div>
-    `}static{this.styles=b`
+    `}static{this.styles=$`
     :host {
       display: block;
       --cb-off-peak: rgba(3, 155, 229, 0.15);
@@ -436,7 +436,7 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
         grid-template-columns: repeat(2, 1fr);
       }
     }
-  `}};customElements.define("charge-board-session-detail",xe);var we=class extends m{constructor(){super(...arguments);this.version=0;this._vehicle="";this._charger="";this._req=0}static{this.properties={hass:{attribute:!1},version:{type:Number},_sessions:{state:!0},_summary:{state:!0},_overview:{state:!0},_error:{state:!0},_message:{state:!0},_vehicle:{state:!0},_charger:{state:!0},_month:{state:!0},_selected:{state:!0}}}willUpdate(){this._month===void 0&&this.hass&&(this._month=Xe(Date.now()/1e3,this.hass.config.time_zone))}updated(e){["version","_vehicle","_charger","_month"].some(s=>e.has(s))&&this.hass&&this._fetch()}async _fetch(){let e=++this._req,s={...this._vehicle&&{vehicle_id:this._vehicle},...this._charger&&{charger_id:this._charger},...this._month&&{month:this._month}};try{let[r,n]=await Promise.all([te(this.hass,s),ee(this.hass)]);if(e!==this._req)return;this._sessions=r.sessions,this._summary=r.summary,this._overview=n,this._error=void 0}catch(r){e===this._req&&(this._error=M(r))}}_t(e,s){return w(v(this.hass),e,s)}_changed(e){this._selected=e.detail.id,this._message=e.detail.error,this._fetch()}render(){if(this._error&&!this._sessions)return l`<p class="message">${this._t(this._error)}</p>`;if(!this._sessions||!this._overview)return l`<p class="message">${this._t("loading")}</p>`;let e=this._overview,s=(r,n,o,c)=>l`<select @change=${a=>c(a.target.value)}>
+  `}};customElements.define("charge-board-session-detail",Ce);var Ee=class extends f{constructor(){super(...arguments);this.version=0;this._vehicle="";this._charger="";this._req=0}static{this.properties={hass:{attribute:!1},version:{type:Number},_sessions:{state:!0},_summary:{state:!0},_overview:{state:!0},_error:{state:!0},_message:{state:!0},_vehicle:{state:!0},_charger:{state:!0},_month:{state:!0},_selected:{state:!0}}}willUpdate(){this._month===void 0&&this.hass&&(this._month=X(Date.now()/1e3,this.hass.config.time_zone))}updated(e){["version","_vehicle","_charger","_month"].some(s=>e.has(s))&&this.hass&&this._fetch()}async _fetch(){let e=++this._req,s={...this._vehicle&&{vehicle_id:this._vehicle},...this._charger&&{charger_id:this._charger},...this._month&&{month:this._month}};try{let[r,n]=await Promise.all([ne(this.hass,s),O(this.hass)]);if(e!==this._req)return;this._sessions=r.sessions,this._summary=r.summary,this._overview=n,this._error=void 0}catch(r){e===this._req&&(this._error=k(r))}}_t(e,s){return x(y(this.hass),e,s)}_changed(e){this._selected=e.detail.id,this._message=e.detail.error,this._fetch()}render(){if(this._error&&!this._sessions)return l`<p class="message">${this._t(this._error)}</p>`;if(!this._sessions||!this._overview)return l`<p class="message">${this._t("loading")}</p>`;let e=this._overview,s=(r,n,o,c)=>l`<select @change=${a=>c(a.target.value)}>
         <option value="" ?selected=${!r}>${this._t(n)}</option>
         ${o.map(a=>l`<option value=${a.id} ?selected=${a.id===r}>${a.name}</option>`)}
       </select>`;return l`
@@ -450,8 +450,8 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
           @change=${r=>this._month=r.target.value}
         />
       </div>
-      ${this._error?l`<p class="error">${this._t(this._error)}</p>`:h}
-      ${this._message?l`<p class="error">${this._t(this._message)}</p>`:h}
+      ${this._error?l`<p class="error">${this._t(this._error)}</p>`:d}
+      ${this._message?l`<p class="error">${this._t(this._message)}</p>`:d}
       <div class="layout ${this._selected?"has-detail":""}">
         <div class="list">${this._banner()} ${this._table()}</div>
         ${this._selected?l`<charge-board-session-detail
@@ -462,9 +462,9 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
               .vehicles=${e.vehicles}
               @session-changed=${this._changed}
               @back=${()=>this._selected=void 0}
-            ></charge-board-session-detail>`:h}
+            ></charge-board-session-detail>`:d}
       </div>
-    `}_banner(){let e=this._summary,s=y(this.hass),r=O(e.cost,this._overview.currency,s);e.cost!=null&&e.unpriced_count>0&&(r=`\u2265 ${r}`);let o=[this._month?new Date(`${this._month}-15T12:00:00Z`).toLocaleString(s,{month:"long",year:"numeric",timeZone:"UTC"}):null,this._t("sessions_count",{n:String(e.count)}),k(e.energy_kwh,s),l`<b>${r}</b>`,e.off_peak_share==null?"\u2014":this._t("off_peak_short",{share:se(e.off_peak_share,s)})].filter(c=>c!=null);return l`<div class="banner">${o.map((c,a)=>l`${a?" \xB7 ":""}${c}`)}</div>`}_table(){let e=this._sessions;if(!e.length)return l`<p class="message">${this._t("no_sessions")}</p>`;let s=y(this.hass),r=this.hass.config.time_zone,n=a=>a==null?"\u2014":ie(a,s,r),o=["col_start","col_end","col_vehicle","col_battery","col_kwh","col_duration","col_cost"],c=this._summary.unpriced_count;return l`
+    `}_banner(){let e=this._summary,s=v(this.hass),r=b(e.cost,this._overview.currency,s);e.cost!=null&&e.unpriced_count>0&&(r=`\u2265 ${r}`);let o=[this._month?new Date(`${this._month}-15T12:00:00Z`).toLocaleString(s,{month:"long",year:"numeric",timeZone:"UTC"}):null,this._t("sessions_count",{n:String(e.count)}),w(e.energy_kwh,s),l`<b>${r}</b>`,e.off_peak_share==null?"\u2014":this._t("off_peak_short",{share:M(e.off_peak_share,s)})].filter(c=>c!=null);return l`<div class="banner">${o.map((c,a)=>l`${a?" \xB7 ":""}${c}`)}</div>`}_table(){let e=this._sessions;if(!e.length)return l`<p class="message">${this._t("no_sessions")}</p>`;let s=v(this.hass),r=this.hass.config.time_zone,n=a=>a==null?"\u2014":ae(a,s,r),o=["col_start","col_end","col_vehicle","col_battery","col_kwh","col_duration","col_cost"],c=this._summary.unpriced_count;return l`
       <div class="scroll">
         <table>
           <thead>
@@ -480,21 +480,21 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
                 <td>${n(a.charge_start)}</td>
                 <td>${n(a.charge_end)}</td>
                 <td>${a.vehicle_name??"\u2014"}</td>
-                <td>${L(a.soc_start,a.soc_end)}</td>
+                <td>${I(a.soc_start,a.soc_end)}</td>
                 <td>${a.energy_kwh.toLocaleString(s,{minimumFractionDigits:1,maximumFractionDigits:1})}</td>
-                <td>${F(a.charging_s,v(this.hass))}</td>
+                <td>${G(a.charging_s,y(this.hass))}</td>
                 <td>
-                  ${O(a.cost,this._overview.currency,s)}${a.estimated?" *":""}
-                  ${a.edited?l`<span class="badge">${this._t("edited")}</span>`:h}
+                  ${b(a.cost,this._overview.currency,s)}${a.estimated?" *":""}
+                  ${a.edited?l`<span class="badge">${this._t("edited")}</span>`:d}
                 </td>
               </tr>`)}
           </tbody>
         </table>
       </div>
       <div class="note">
-        ${this._t("estimated_note")}${c?l` · ${this._t("unpriced_note",{n:String(c)})}`:h}
+        ${this._t("estimated_note")}${c?l` · ${this._t("unpriced_note",{n:String(c)})}`:d}
       </div>
-    `}static{this.styles=b`
+    `}static{this.styles=$`
     :host {
       display: block;
       padding: 16px;
@@ -599,28 +599,331 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
         padding: 8px;
       }
     }
-  `}};customElements.define("charge-board-sessions",we);var bt="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z",ke=class extends m{constructor(){super(...arguments);this.narrow=!1;this._tab="overview";this._version=0}static{this.properties={hass:{attribute:!1},narrow:{type:Boolean},route:{attribute:!1},panel:{attribute:!1},_tab:{state:!0},_version:{state:!0}}}connectedCallback(){super.connectedCallback(),this._subscribe()}disconnectedCallback(){super.disconnectedCallback(),this._unsub?.then(e=>e()).catch(()=>{}),this._unsub=void 0}updated(e){e.has("hass")&&this._subscribe()}_subscribe(){if(!this.hass||this._unsub)return;let e=We(this.hass,()=>this._version++);this._unsub=e,e.then(()=>this._version++).catch(()=>{this._unsub===e&&(this._unsub=void 0)})}_t(e){return w(v(this.hass),e)}_toggleMenu(){this.dispatchEvent(new CustomEvent("hass-toggle-menu",{bubbles:!0,composed:!0}))}render(){if(!this.hass)return l``;let e=["overview","sessions"];return l`
+  `}};customElements.define("charge-board-sessions",Ee);var le=$`
+  :host {
+    display: block;
+    padding: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .message,
+  .note,
+  .label,
+  small {
+    color: var(--secondary-text-color);
+  }
+  .message {
+    text-align: center;
+  }
+  .note {
+    font-size: 0.85em;
+    margin-top: 6px;
+  }
+  .error {
+    color: var(--error-color, #db4437);
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  select,
+  button.chip {
+    font: inherit;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--divider-color, #e0e0e0);
+    background: var(--card-background-color, #fff);
+    color: var(--primary-text-color);
+    cursor: pointer;
+  }
+  button.chip[aria-pressed="true"] {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  .card,
+  .scroll {
+    background: var(--card-background-color, #fff);
+    border: 1px solid var(--divider-color, #e0e0e0);
+    border-radius: var(--ha-card-border-radius, 12px);
+    margin-bottom: 12px;
+  }
+  .card {
+    padding: 12px;
+  }
+  .label {
+    margin-bottom: 8px;
+  }
+  .figs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    text-align: center;
+  }
+  .fig b {
+    display: block;
+    font-size: 1.3em;
+  }
+  .fig span,
+  .fig small {
+    display: block;
+    font-size: 0.85em;
+  }
+  .good {
+    color: var(--success-color, #16a34a);
+  }
+  .bad {
+    color: var(--error-color, #db4437);
+  }
+  .scroll {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+  }
+  th {
+    text-align: left;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+  }
+  th,
+  td {
+    padding: 8px;
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-top: 1px solid var(--divider-color, #e0e0e0);
+  }
+  @media (max-width: 600px) {
+    :host {
+      padding: 8px;
+    }
+  }
+`;var ee=110,Pe=class extends f{constructor(){super(...arguments);this.version=0;this._year=new Date().getFullYear();this._req=0}static{this.properties={hass:{attribute:!1},version:{type:Number},_stats:{state:!0},_overview:{state:!0},_error:{state:!0},_vehicle:{state:!0},_year:{state:!0}}}updated(e){["version","_vehicle","_year"].some(s=>e.has(s))&&this.hass&&this._fetch()}async _fetch(){let e=++this._req;try{let s=this._overview??await O(this.hass);this._vehicle===void 0&&(this._vehicle=s.vehicles[0]?.id??"");let r=await st(this.hass,this._year,this._vehicle||void 0);if(e!==this._req)return;this._overview=s,this._stats=r,this._error=void 0}catch(s){e===this._req&&(this._error=k(s))}}_t(e,s){return x(y(this.hass),e,s)}_monthName(e,s="long"){return new Date(`${e}-15T12:00:00Z`).toLocaleString(v(this.hass),{month:s,...s==="long"&&{year:"numeric"},timeZone:"UTC"})}render(){if(this._error&&!this._stats)return l`<p class="message">${this._t(this._error)}</p>`;if(!this._stats||!this._overview)return l`<p class="message">${this._t("loading")}</p>`;let e=Array.from({length:5},(s,r)=>new Date().getFullYear()-r);return l`
+      <div class="filters">
+        <select @change=${s=>this._vehicle=s.target.value}>
+          ${this._overview.vehicles.map(s=>l`<option value=${s.id} ?selected=${s.id===this._vehicle}>${s.name}</option>`)}
+          <option value="" ?selected=${this._vehicle===""}>${this._t("all_vehicles")}</option>
+        </select>
+        <select
+          aria-label=${this._t("year")}
+          @change=${s=>this._year=Number(s.target.value)}
+        >
+          ${e.map(s=>l`<option value=${s} ?selected=${s===this._year}>${s}</option>`)}
+        </select>
+      </div>
+      ${this._error?l`<p class="error">${this._t(this._error)}</p>`:d} ${this._head()} ${this._bars()}
+      ${this._table()}
+      <div class="note">${this._t("km_note")}<br />${this._t("stats_settings_note")}</div>
+    `}_head(){let{rows:e,total:s,currency:r}=this._stats,n=v(this.hass),o=X(Date.now()/1e3,this.hass.config.time_zone),c=e.findIndex(he=>he.month===o),a=c>=0?e[c]:s,p=c>0?e[c-1]:null,u=c>=0?this._t("current_month",{month:this._monthName(o)}):this._t("total_year",{year:String(this._year)}),h=p&&p.cost&&a.cost!=null?l`<small class="delta ${a.cost<=p.cost?"good":"bad"}"
+          >${at(a.cost/p.cost-1,n)} ${this._t("vs_prev")}</small
+        >`:d,m=(he,ft,vt=d,bt="")=>l`<div class="fig"><b class=${bt}>${he}</b><span>${ft}</span>${vt}</div>`,g=a.fuel_l100!=null&&a.fuel_price!=null?l`<small
+            >${this._t("petrol_ref",{l100:a.fuel_l100.toLocaleString(n,{maximumFractionDigits:1}),price:b(a.fuel_price,r,n)})}</small
+          >`:d,S=a.savings==null?"\u2014":b(-a.savings,r,n);return l`<div class="card">
+      <div class="label">${u}</div>
+      <div class="figs">
+        ${m(b(a.cost,r,n),this._t("cost"),h)}
+        ${m(w(a.energy_kwh,n),this._t("sessions_n",{n:String(a.sessions)}))}
+        ${m(a.off_peak_share==null?"\u2014":M(a.off_peak_share,n),this._t("off_peak_label"))}
+        ${m(b(a.cost_per_100km,r,n),this._t("per_100km"),a.km==null?d:l`<small>${this._t("km_n",{km:Math.round(a.km).toLocaleString(n)})}</small>`)}
+        ${m(S,this._t("vs_petrol"),g,a.savings!=null&&a.savings>0?"good":"")}
+      </div>
+    </div>`}_bars(){let e=this._stats.rows,s=ut(e,ee);return l`<div class="card">
+      <div class="label">
+        ${this._t("cost_by_month")} · <span class="off">■</span> ${this._t("off_peak_slice")}
+        <span class="peak">■</span> ${this._t("peak_slice")}
+      </div>
+      <svg viewBox="0 0 100 ${ee}" preserveAspectRatio="none" class="bars" role="img">
+        ${s.map(r=>P`<rect class="peak" x=${r.x} width=${r.w} y=${ee-r.hOff-r.hPeak} height=${r.hPeak}></rect>
+            <rect class="off" x=${r.x} width=${r.w} y=${ee-r.hOff} height=${r.hOff}></rect>`)}
+      </svg>
+      <div class="months">${e.map(r=>l`<span>${this._monthName(r.month,"short")}</span>`)}</div>
+    </div>`}_table(){let{rows:e,total:s,currency:r}=this._stats,n=v(this.hass),o=X(Date.now()/1e3,this.hass.config.time_zone),c=e.filter(h=>h.month<=o&&(h.sessions||h.km!=null)),a=h=>h.toLocaleString(n,{minimumFractionDigits:1,maximumFractionDigits:1}),p=(h,m,g="")=>l`<tr class=${g}>
+      <td>${m}</td>
+      <td>${h.sessions}</td>
+      <td>${a(h.energy_kwh)}</td>
+      <td><b>${b(h.cost,r,n)}</b></td>
+      <td>${h.off_peak_share==null?"\u2014":M(h.off_peak_share,n)}</td>
+      <td>${h.km==null?h.sessions?`${"\u2014"} *`:"\u2014":Math.round(h.km).toLocaleString(n)}</td>
+      <td>${h.cost_per_100km==null?"\u2014":b(h.cost_per_100km,r,n)}</td>
+      <td class=${h.savings!=null&&h.savings>0?"good":""}>
+        ${h.savings==null?"\u2014":b(-h.savings,r,n)}
+      </td>
+    </tr>`;return l`<div class="scroll">
+      <table>
+        <thead>
+          <tr>${["col_month","col_sessions","col_kwh","col_cost","col_hc","col_km","col_per_100","col_vs_petrol"].map(h=>l`<th>${this._t(h)}</th>`)}</tr>
+        </thead>
+        <tbody>
+          ${c.reverse().map(h=>p(h,this._monthName(h.month)))}
+          ${p(s,this._t("total_year",{year:String(this._year)}),"total")}
+        </tbody>
+      </table>
+    </div>`}static{this.styles=[le,$`
+      .bars {
+        width: 100%;
+        height: ${ee}px;
+        border-bottom: 1px solid var(--divider-color, #e0e0e0);
+      }
+      rect.off,
+      span.off {
+        fill: var(--info-color, #3b82f6);
+        color: var(--info-color, #3b82f6);
+      }
+      rect.peak,
+      span.peak {
+        fill: var(--warning-color, #f59e0b);
+        color: var(--warning-color, #f59e0b);
+      }
+      .months {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        text-align: center;
+        font-size: 0.75em;
+        color: var(--secondary-text-color);
+      }
+      tr.total {
+        font-weight: 600;
+      }
+    `]}};customElements.define("charge-board-stats",Pe);var mt=30,Oe=300,He=80,Me=class extends f{constructor(){super(...arguments);this.version=0;this._soc=[];this._req=0}static{this.properties={hass:{attribute:!1},version:{type:Number},_overview:{state:!0},_card:{state:!0},_soc:{state:!0},_error:{state:!0},_vehicle:{state:!0}}}updated(e){["version","_vehicle"].some(s=>e.has(s))&&this.hass&&this._fetch()}async _fetch(){let e=++this._req;try{let s=await O(this.hass);if(e!==this._req||(this._overview=s,(!this._vehicle||!s.vehicles.some(o=>o.id===this._vehicle))&&(this._vehicle=s.vehicles[0]?.id,!this._vehicle)))return;let r=await rt(this.hass,this._vehicle);if(e!==this._req)return;this._card=r,this._error=void 0;let n=r.config.find(o=>o.key==="soc_entity")?.entity_id;if(n&&this._socFor!==r.id){let o=Date.now()/1e3;this._soc=await it(this.hass,n,o-mt*86400,o).catch(()=>[]),this._socFor=r.id}}catch(s){e===this._req&&(this._error=k(s))}}_t(e,s){return x(y(this.hass),e,s)}render(){return this._error&&!this._card?l`<p class="message">${this._t(this._error)}</p>`:this._overview&&!this._overview.vehicles.length?l`<p class="message">${this._t("no_vehicles")}</p>`:!this._card||!this._overview?l`<p class="message">${this._t("loading")}</p>`:l`
+      <div class="filters">
+        ${this._overview.vehicles.map(e=>l`<button
+            class="chip"
+            aria-pressed=${e.id===this._vehicle}
+            @click=${()=>{this._vehicle=e.id,this._soc=[]}}
+          >
+            ${e.name}
+          </button>`)}
+      </div>
+      ${this._card.cut_ignored&&this._card.target_source==="home"?l`<p class="error">${this._t("cut_ignored")}</p>`:d}
+      ${this._figures()} ${this._chart()} ${this._table()} ${this._config()}
+    `}_figures(){let e=this._card,s=v(this.hass),r=(o,c=0)=>o==null?"\u2014":o.toLocaleString(s,{maximumFractionDigits:c,minimumFractionDigits:c}),n=(o,c,a)=>l`<div class="fig"><b>${o}</b><span>${c}</span>${a?l`<small>${a}</small>`:d}</div>`;return l`<div class="card">
+      <div class="figs">
+        ${n(e.soc==null?"\u2014":`${r(e.soc)} %`,this._t("battery_now"),e.target==null?void 0:this._t("target_n",{n:r(e.target)}))}
+        ${n(e.consumption_30d==null?"\u2014":`${r(e.consumption_30d,1)} kWh`,this._t("consumption_30d"))}
+        ${n(e.odometer==null?"\u2014":`${r(e.odometer)} km`,this._t("odometer"))}
+        ${n(e.autonomy_km==null?"\u2014":`\u2248 ${r(e.autonomy_km)} km`,this._t("autonomy"))}
+      </div>
+      ${e.consumption_since==null?d:l`<div class="note">${this._t("consumption_since",{value:r(e.consumption_since,1)})}</div>`}
+    </div>`}_chart(){let e=Date.now()/1e3,s=e-mt*86400,r=this.hass.config.time_zone,n=v(this.hass),o=c=>(Math.max(c,s)-s)/(e-s)*Oe;return l`<div class="card">
+      <div class="label">${this._t("battery_30d")} · <span class="band">▮</span> ${this._t("recharges")}</div>
+      <svg viewBox="0 0 ${Oe} ${He}" preserveAspectRatio="none" class="line" role="img">
+        ${this._card.sessions.map(c=>P`<rect class="band" x=${o(c.start)} y="0" height=${He}
+            width=${Math.max(o(c.end??e)-o(c.start),1.5)}></rect>`)}
+        <path d=${_t(this._soc,Oe,He,s,e)}></path>
+      </svg>
+      <div class="axis">
+        <span>${H(s,n,r)}</span><span>${H(e,n,r)}</span>
+      </div>
+    </div>`}_table(){let e=this._card,s=v(this.hass),r=e.rows.filter(c=>c.sessions||c.km!=null).reverse();if(!r.length)return d;let n=c=>new Date(`${c}-15T12:00:00Z`).toLocaleString(s,{month:"long",year:"numeric",timeZone:"UTC"}),o=["col_month","col_km","col_kwh","col_kwh_100","col_per_100"];return l`<div class="card">
+      <div class="label">${this._t("consumption_by_month")}</div>
+      <div class="scroll flat">
+        <table>
+          <thead>
+            <tr>${o.map(c=>l`<th>${this._t(c)}</th>`)}</tr>
+          </thead>
+          <tbody>
+            ${r.map(c=>l`<tr>
+                <td>${n(c.month)}</td>
+                <td>${c.km==null?`${"\u2014"} *`:Math.round(c.km).toLocaleString(s)}</td>
+                <td>${w(c.energy_kwh,s)}</td>
+                <td>${c.kwh_100km==null?"\u2014":c.kwh_100km.toLocaleString(s,{maximumFractionDigits:1})}</td>
+                <td>${b(c.cost_per_100km,e.currency,s)}</td>
+              </tr>`)}
+          </tbody>
+        </table>
+      </div>
+    </div>`}_config(){let e=this._card,s=v(this.hass),r=c=>l`<span class=${c.ok?"good":"bad"}>●</span> ${c.value==null?"\u2014":c.value.toLocaleString(s,{maximumFractionDigits:3})}`,n=(c,a,p)=>l`<tr>
+      <td>${this._t(c)}</td>
+      <td>
+        ${a.entity_id??(a.key==="target"||a.key==="fuel_price"?this._t("fixed_value"):"\u2014")}
+        ${r(a)}${p?l` <small>${p}</small>`:d}</td>
+    </tr>`,o=c=>e.config.find(a=>a.key===c);return l`<div class="card">
+      <div class="head">
+        <span class="label">${this._t("configuration")}</span>
+        <a href="/config/integrations/integration/charge_board">${this._t("edit")} ↗</a>
+      </div>
+      <table class="cfg">
+        <tbody>
+          <tr>
+            <td>${this._t("cfg_capacity")}</td>
+            <td>${e.capacity_kwh==null?"\u2014":`${e.capacity_kwh.toLocaleString(s)} kWh`}</td>
+          </tr>
+          ${n("cfg_soc_entity",o("soc_entity"))}
+          ${n("cfg_target",o("target"),this._t(e.target_source==="home"?"target_home":"target_vehicle"))}
+          ${n("cfg_odometer_entity",o("odometer_entity"))} ${n("cfg_fuel_price",o("fuel_price"))}
+          <tr>
+            <td>${this._t("cfg_fuel_l100")}</td>
+            <td>${e.fuel_l100==null?"\u2014":`${e.fuel_l100.toLocaleString(s)} L/100 km`}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`}static{this.styles=[le,$`
+      .line {
+        width: 100%;
+        height: 90px;
+      }
+      .line path {
+        fill: none;
+        stroke: var(--info-color, #3b82f6);
+        stroke-width: 2;
+        vector-effect: non-scaling-stroke;
+      }
+      rect.band {
+        fill: var(--success-color, #22c55e);
+        opacity: 0.25;
+      }
+      span.band {
+        color: var(--success-color, #22c55e);
+      }
+      .axis,
+      .head {
+        display: flex;
+        justify-content: space-between;
+      }
+      .axis {
+        font-size: 0.75em;
+        color: var(--secondary-text-color);
+      }
+      .head a {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+      .flat {
+        border: none;
+        margin: 0;
+      }
+      table.cfg td:first-child {
+        color: var(--secondary-text-color);
+      }
+      table.cfg tr {
+        border: none;
+      }
+    `]}};customElements.define("charge-board-vehicles",Me);var Nt="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z",gt={overview:"tab_overview",sessions:"tab_sessions",vehicles:"tab_vehicles",stats:"tab_stats"},Te=class extends f{constructor(){super(...arguments);this.narrow=!1;this._tab="overview";this._version=0}static{this.properties={hass:{attribute:!1},narrow:{type:Boolean},route:{attribute:!1},panel:{attribute:!1},_tab:{state:!0},_version:{state:!0}}}connectedCallback(){super.connectedCallback(),this._subscribe()}disconnectedCallback(){super.disconnectedCallback(),this._unsub?.then(e=>e()).catch(()=>{}),this._unsub=void 0}updated(e){e.has("hass")&&this._subscribe()}_subscribe(){if(!this.hass||this._unsub)return;let e=nt(this.hass,()=>this._version++);this._unsub=e,e.then(()=>this._version++).catch(()=>{this._unsub===e&&(this._unsub=void 0)})}_t(e){return x(y(this.hass),e)}_toggleMenu(){this.dispatchEvent(new CustomEvent("hass-toggle-menu",{bubbles:!0,composed:!0}))}render(){return this.hass?l`
       <header>
         <div class="toolbar">
           ${this.narrow?l`<button class="menu" aria-label=${this._t("menu")} @click=${this._toggleMenu}>
-                <svg viewBox="0 0 24 24"><path d=${bt}></path></svg>
+                <svg viewBox="0 0 24 24"><path d=${Nt}></path></svg>
               </button>`:l``}
           <div class="title">${this._t("title")}</div>
         </div>
         <nav role="tablist">
-          ${e.map(s=>l`<button
+          ${Object.keys(gt).map(e=>l`<button
               role="tab"
-              aria-selected=${this._tab===s}
-              @click=${()=>this._tab=s}
+              aria-selected=${this._tab===e}
+              @click=${()=>this._tab=e}
             >
-              ${this._t(s==="overview"?"tab_overview":"tab_sessions")}
+              ${this._t(gt[e])}
             </button>`)}
         </nav>
       </header>
       <main>
-        ${this._tab==="overview"?l`<charge-board-overview .hass=${this.hass} .version=${this._version}></charge-board-overview>`:l`<charge-board-sessions .hass=${this.hass} .version=${this._version}></charge-board-sessions>`}
+        ${this._content()}
       </main>
-    `}static{this.styles=b`
+    `:l``}_content(){let e={hass:this.hass,version:this._version};switch(this._tab){case"sessions":return l`<charge-board-sessions .hass=${e.hass} .version=${e.version}></charge-board-sessions>`;case"vehicles":return l`<charge-board-vehicles .hass=${e.hass} .version=${e.version}></charge-board-vehicles>`;case"stats":return l`<charge-board-stats .hass=${e.hass} .version=${e.version}></charge-board-stats>`;default:return l`<charge-board-overview .hass=${e.hass} .version=${e.version}></charge-board-overview>`}}static{this.styles=$`
     :host {
       display: block;
       min-height: 100vh;
@@ -675,6 +978,7 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
     nav {
       display: flex;
       padding: 0 12px;
+      overflow-x: auto;
     }
     nav button {
       padding: 12px 16px;
@@ -688,7 +992,7 @@ var X=globalThis,G=X.ShadowRoot&&(X.ShadyCSS===void 0||X.ShadyCSS.nativeShadow)&
       opacity: 1;
       border-bottom-color: currentColor;
     }
-  `}};customElements.define("charge-board-panel",ke);
+  `}};customElements.define("charge-board-panel",Te);
 /*! Bundled license information:
 
 @lit/reactive-element/css-tag.js:

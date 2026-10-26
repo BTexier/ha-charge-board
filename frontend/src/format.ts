@@ -71,3 +71,8 @@ export function formatDayTime(ts: number, locale: string, timeZone: string): str
 export function monthOf(ts: number, timeZone: string): string {
   return parts(ts, "en-CA", timeZone, { year: "numeric", month: "2-digit" });
 }
+
+/** "▼ 12 %": change from the previous period (a decrease of cost is good news). */
+export function formatDelta(change: number, locale: string): string {
+  return `${change < 0 ? "▼" : "▲"} ${formatPercent(Math.abs(change), locale)}`;
+}

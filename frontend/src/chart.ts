@@ -57,3 +57,34 @@ export function bandsFor(curve: Point[], end: number): { from: number; to: numbe
   });
   return bands;
 }
+
+/** Stacked monthly bars: x and w in % of the width, heights in px of `height` (tallest = full). */
+export function barsFor(
+  rows: { off_peak_cost: number; peak_cost: number }[],
+  height: number,
+): { x: number; w: number; hOff: number; hPeak: number }[] {
+  const max = Math.max(...rows.map((r) => r.off_peak_cost + r.peak_cost), 0) || 1;
+  const step = 100 / (rows.length || 1);
+  return rows.map((row, i) => ({
+    x: r(i * step + step * 0.15),
+    w: r(step * 0.7),
+    hOff: r((row.off_peak_cost / max) * height),
+    hPeak: r((row.peak_cost / max) * height),
+  }));
+}
+
+/** Polyline of values (0..max, e.g. a battery level) over start → end. */
+export function linePath(
+  points: { t: number; v: number }[],
+  width: number,
+  height: number,
+  start: number,
+  end: number,
+  max = 100,
+): string {
+  if (!points.length) return "";
+  const span = end - start || 1;
+  return points
+    .map((p, i) => `${i ? "L" : "M"}${r(((p.t - start) / span) * width)} ${r(height - (p.v / max) * height)}`)
+    .join(" ");
+}

@@ -3,11 +3,20 @@ import { subscribeUpdates, type HomeAssistant } from "./api";
 import { langOf, t, type Key } from "./i18n";
 import "./overview";
 import "./sessions";
+import "./stats";
+import "./vehicles";
 
 const MENU_ICON =
   "M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"; // mdi:menu
 
-type Tab = "overview" | "sessions";
+type Tab = "overview" | "sessions" | "vehicles" | "stats";
+
+const TABS: Record<Tab, Key> = {
+  overview: "tab_overview",
+  sessions: "tab_sessions",
+  vehicles: "tab_vehicles",
+  stats: "tab_stats",
+};
 
 /** Sidebar panel "Recharge": toolbar, tabs, and the selected tab. */
 class ChargeBoardPanel extends LitElement {
@@ -65,7 +74,6 @@ class ChargeBoardPanel extends LitElement {
 
   render() {
     if (!this.hass) return html``;
-    const tabs: Tab[] = ["overview", "sessions"];
     return html`
       <header>
         <div class="toolbar">
@@ -77,23 +85,35 @@ class ChargeBoardPanel extends LitElement {
           <div class="title">${this._t("title")}</div>
         </div>
         <nav role="tablist">
-          ${tabs.map(
+          ${(Object.keys(TABS) as Tab[]).map(
             (tab) => html`<button
               role="tab"
               aria-selected=${this._tab === tab}
               @click=${() => (this._tab = tab)}
             >
-              ${this._t(tab === "overview" ? "tab_overview" : "tab_sessions")}
+              ${this._t(TABS[tab])}
             </button>`,
           )}
         </nav>
       </header>
       <main>
-        ${this._tab === "overview"
-          ? html`<charge-board-overview .hass=${this.hass} .version=${this._version}></charge-board-overview>`
-          : html`<charge-board-sessions .hass=${this.hass} .version=${this._version}></charge-board-sessions>`}
+        ${this._content()}
       </main>
     `;
+  }
+
+  private _content() {
+    const props = { hass: this.hass, version: this._version };
+    switch (this._tab) {
+      case "sessions":
+        return html`<charge-board-sessions .hass=${props.hass} .version=${props.version}></charge-board-sessions>`;
+      case "vehicles":
+        return html`<charge-board-vehicles .hass=${props.hass} .version=${props.version}></charge-board-vehicles>`;
+      case "stats":
+        return html`<charge-board-stats .hass=${props.hass} .version=${props.version}></charge-board-stats>`;
+      default:
+        return html`<charge-board-overview .hass=${props.hass} .version=${props.version}></charge-board-overview>`;
+    }
   }
 
   static styles = css`
@@ -151,6 +171,7 @@ class ChargeBoardPanel extends LitElement {
     nav {
       display: flex;
       padding: 0 12px;
+      overflow-x: auto;
     }
     nav button {
       padding: 12px 16px;

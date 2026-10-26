@@ -112,6 +112,80 @@ export const mergeSessions = (hass: HomeAssistant, session_id: string, other_id:
 export const splitSession = (hass: HomeAssistant, session_id: string, at: number) =>
   call<CorrectionResult>(hass, "split", { session_id, at });
 
+/** One month (or the year's total, month = null) of the Statistics and Vehicles tabs. */
+export interface StatsRow {
+  month: string | null; // "YYYY-MM"
+  sessions: number;
+  energy_kwh: number;
+  cost: number | null;
+  unpriced: number;
+  off_peak_share: number | null;
+  off_peak_cost: number;
+  peak_cost: number;
+  km: number | null; // null: odometer statistics do not cover the month
+  fuel_price: number | null;
+  fuel_l100: number | null;
+  cost_per_100km: number | null;
+  fuel_cost: number | null;
+  savings: number | null;
+  kwh_100km?: number | null;
+}
+
+export interface Stats {
+  currency: string;
+  rows: StatsRow[];
+  total: StatsRow;
+}
+
+export interface ConfigItem {
+  key: "soc_entity" | "target" | "odometer_entity" | "fuel_price";
+  entity_id: string | null;
+  value: number | null;
+  ok: boolean;
+}
+
+export interface VehicleCard {
+  id: string;
+  name: string;
+  capacity_kwh: number | null;
+  soc: number | null;
+  target: number | null;
+  target_source: "vehicle" | "home";
+  odometer: number | null;
+  consumption_30d: number | null;
+  autonomy_km: number | null;
+  consumption_since: number | null;
+  fuel_l100: number | null;
+  currency: string;
+  rows: StatsRow[];
+  sessions: { start: number; end: number | null }[];
+  config: ConfigItem[];
+  cut_ignored: boolean;
+}
+
+export const getStats = (hass: HomeAssistant, year: number, vehicle_id?: string) =>
+  call<Stats>(hass, "stats", { year, ...(vehicle_id && { vehicle_id }) });
+
+export const getVehicle = (hass: HomeAssistant, vehicle_id: string) =>
+  call<VehicleCard>(hass, "vehicle", { vehicle_id });
+
+/** Hourly mean of an entity from Home Assistant's long-term statistics (t in Unix seconds). */
+export async function hourlyMeans(hass: HomeAssistant, entity_id: string, start: number, end: number) {
+  const res = await hass.connection.sendMessagePromise<
+    Record<string, { start: number | string; mean: number | null }[]>
+  >({
+    type: "recorder/statistics_during_period",
+    start_time: new Date(start * 1000).toISOString(),
+    end_time: new Date(end * 1000).toISOString(),
+    statistic_ids: [entity_id],
+    period: "hour",
+    types: ["mean"],
+  });
+  return (res[entity_id] ?? [])
+    .filter((p) => p.mean != null)
+    .map((p) => ({ t: (typeof p.start === "number" ? p.start : Date.parse(p.start)) / 1000, v: p.mean as number }));
+}
+
 /** Calls `onUpdate` whenever sessions or live data change; resolves to the unsubscribe function. */
 export const subscribeUpdates = (hass: HomeAssistant, onUpdate: () => void) =>
   hass.connection.subscribeMessage(onUpdate, { type: "charge_board/subscribe" });

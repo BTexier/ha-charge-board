@@ -52,3 +52,12 @@ describe("months and dates", () => {
     expect(formatDayTime(1761078600, "fr", "Europe/Paris")).toBe("mar. 21/10 22:30");
   });
 });
+
+import { formatDelta } from "../src/format";
+
+describe("delta", () => {
+  it("shows a decrease with a down arrow", () => {
+    expect(formatDelta(-0.12, "fr")).toBe("▼ 12 %");
+    expect(formatDelta(0.05, "en")).toBe("▲ 5%");
+  });
+});
