@@ -1,5 +1,7 @@
 [tool.ruff]
 line-length = 100
+# Plans and specs carry code samples that are not meant to be formatted.
+extend-exclude = ["docs"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

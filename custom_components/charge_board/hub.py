@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from datetime import datetime, time, timedelta
 from uuid import uuid4
 
@@ -176,24 +177,27 @@ class Hub:
         if event.kind == "plugged":
             target = self.target_for(vehicle_id)
             data |= {"soc": soc, "target": target}
-            text = plugged_text(lang, charger, name, soc, target)
+            text = lambda: plugged_text(lang, charger, name, soc, target)
         elif event.kind == "started":
             sess = self.trackers[charger_id].current
             data |= {"charge_start": sess.charge_start if sess else None, "soc": soc}
-            text = started_text(lang, charger, name, soc)
+            text = lambda: started_text(lang, charger, name, soc)
         else:
             data["session"] = event.session.to_dict()
-            text = summary_text(lang, charger, name, event.session, self.hass.config.currency)
+            currency = self.hass.config.currency
+            text = lambda: summary_text(lang, charger, name, event.session, currency)
         self.hass.bus.async_fire(f"{EVENT_PREFIX}{event.kind}", data)
         service = self.options.get("notify_service")
         if service and event.kind in self.options.get("notifications", NOTIFICATIONS):
             self.entry.async_create_background_task(
-                self.hass, self._async_notify(service, *text), f"{DOMAIN} notify"
+                self.hass, self._async_notify(service, text), f"{DOMAIN} notify"
             )
 
-    async def _async_notify(self, service: str, title: str, message: str) -> None:
+    async def _async_notify(self, service: str, text: Callable[[], tuple[str, str]]) -> None:
+        """Build the text and send it; never raises (the event is already fired)."""
         url = f"/{URL_PATH}"
         try:
+            title, message = text()
             await self.hass.services.async_call(
                 "notify",
                 service,

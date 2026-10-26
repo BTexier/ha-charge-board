@@ -248,3 +248,37 @@ async def test_no_phone_sends_nothing_but_fires_events(hass, freezer):
     await _full_cycle(hass, freezer)
     assert calls == []
     assert len(ev) == 3
+
+
+async def test_a_failing_text_still_fires_the_event(hass, freezer, monkeypatch):
+    from custom_components.charge_board import hub as hub_module
+
+    def boom(*args):
+        raise ValueError("bad text")
+
+    monkeypatch.setattr(hub_module, "plugged_text", boom)
+    async_mock_service(hass, "notify", "mobile_app_iphone")
+    await _notify_entry(hass, notify_service="mobile_app_iphone")
+    ev = await _capture(hass)
+    await _full_cycle(hass, freezer)
+    assert [e.event_type for e in ev] == list(EVENTS)
+
+
+async def test_restart_with_plug_unavailable_first_sends_nothing(hass, freezer):
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
+    entry = await _notify_entry(hass, notify_service="mobile_app_iphone")
+    hass.states.async_set("binary_sensor.plug", "on")
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 600)
+    sent = len(calls)
+    await hass.config_entries.async_unload(entry.entry_id)
+    hass.states.async_set("binary_sensor.plug", "unavailable")  # as at every HA start
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 60)
+    hass.states.async_set("binary_sensor.plug", "on")
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 300)
+    assert len(calls) == sent
+    cid = next(iter(entry.runtime_data.chargers))
+    assert entry.runtime_data.live(cid)["session"]  # the session is still the same open one
