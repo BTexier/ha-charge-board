@@ -129,7 +129,8 @@ class SessionTracker:
             self._run_start = None
         elif self._run_start is None:
             self._run_start = a.t
-        if charging and self._session is None:
+        # A power reading still above the threshold just after an unplug is stale: no session.
+        if charging and self._session is None and self._plugged is not False:
             self._session = Session(
                 id=self._new_id(),
                 charger_id=self.charger_id,

@@ -475,3 +475,19 @@ def test_unplug_while_charging_with_stale_power_is_not_a_new_start():
 
     ev = events(make_tracker(), at(18, 50), at(20, 30), make)
     assert [k for k, _ in ev] == ["plugged", "started", "unplugged"]
+
+
+def test_stale_power_after_unplug_opens_no_phantom_session():
+    # Power still reads 2200 W for a minute after the unplug; a quick top-up 1 h later
+    # must be its own session, with its own plug-in time.
+    def make(t):
+        first = at(19) <= t < at(20, 1)
+        second = at(21, 1) <= t < at(21, 30)
+        plugged = at(18, 59) <= t < at(20) or at(21) <= t < at(21, 31)
+        return Sample(t=t, power_w=2200 if first or second else 0, plugged=plugged)
+
+    tracker = make_tracker()
+    done = run(tracker, at(18, 50), at(21, 40), make)
+    assert len(done) == 2
+    assert done[1].plugged_at == at(21)
+    assert done[1].charge_start == at(21, 1)
