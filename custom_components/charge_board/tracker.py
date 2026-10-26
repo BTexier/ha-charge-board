@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
-from .const import CURVE_STEP_S, MAX_CHARGER_W, MIN_SESSION_KWH, TICK_SECONDS
+from .const import CURVE_STEP_S, MAX_CHARGER_W, MIN_SESSION_KWH, STARTED_MIN_S, TICK_SECONDS
 from .model import CurvePoint, Session, TariffSlice
 
 
@@ -28,6 +28,15 @@ class TrackerSettings:
     gap_hours: float
     priced: bool
     curve_step_s: int = CURVE_STEP_S
+
+
+@dataclass
+class TrackerEvent:
+    """A transition worth announcing: "plugged", "started" or "unplugged" (with its session)."""
+
+    kind: str
+    t: float
+    session: Session | None = None
 
 
 def _trapezoid(a: Sample, b: Sample) -> float:
@@ -77,6 +86,9 @@ class SessionTracker:
         self._counter_ref: tuple[float, float] | None = None
         self._ref_max_w: float | None = None  # highest known power since that reading
         self._ref_kwh = 0.0  # power trapezoid since that reading (restart gaps excluded)
+        self._run_start: float | None = None  # start of the current continuous charging run
+        self._start_announced = False  # "started" already emitted for the open session
+        self._events: list[TrackerEvent] = []
 
     @property
     def current(self) -> Session | None:
@@ -89,6 +101,11 @@ class SessionTracker:
         """
         self._soc = None
 
+    def pop_events(self) -> list[TrackerEvent]:
+        """Transitions since the last call, in order (not persisted)."""
+        events, self._events = self._events, []
+        return events
+
     def feed(self, sample: Sample, vehicle_id: str | None) -> Session | None:
         """Process one sample; return the session it finishes (if kept), else None."""
         prev = self._last
@@ -100,12 +117,18 @@ class SessionTracker:
             if sample.t - prev.t <= 2 * TICK_SECONDS:
                 self._ref_kwh += _trapezoid(prev, sample)
         finished = self._close_if_done(sample)
+        if finished is not None:
+            self._events.append(TrackerEvent("unplugged", sample.t, finished))
         self._absorb(sample)
         return finished
 
     def _interval(self, a: Sample, b: Sample, vehicle_id: str | None) -> None:
         s = self.settings
         charging = a.power_w is not None and a.power_w > s.power_threshold_w
+        if not charging or b.t - a.t > 2 * TICK_SECONDS:
+            self._run_start = None
+        elif self._run_start is None:
+            self._run_start = a.t
         if charging and self._session is None:
             self._session = Session(
                 id=self._new_id(),
@@ -133,6 +156,9 @@ class SessionTracker:
         if charging:
             sess.charging_s += dt
             sess.charge_end = b.t
+            if not self._start_announced and b.t - self._run_start >= STARTED_MIN_S:
+                self._start_announced = True
+                self._events.append(TrackerEvent("started", b.t))
         # Energy the counter recovers after an outage (restart with entities not yet loaded)
         # is not drawn: it would be a power spike in a 30 s interval.
         if a.energy_kwh is not None or self._counter_ref is None:
@@ -204,6 +230,7 @@ class SessionTracker:
         ):
             return None
         self._session = None
+        self._start_announced = False
         self._soc = None  # never carry a level over to the next session (or vehicle)
         sess.open = False
         sess.curve = [p for p in sess.curve if p.t < sess.charge_end]
@@ -213,6 +240,7 @@ class SessionTracker:
         if sample.plugged is not None:
             if sample.plugged and self._plugged is False:
                 self._plugged_at = sample.t
+                self._events.append(TrackerEvent("plugged", sample.t))
             elif not sample.plugged:
                 self._plugged_at = None
             self._plugged = sample.plugged
@@ -245,6 +273,8 @@ class SessionTracker:
             "counter_ref": self._counter_ref,
             "ref_max_w": self._ref_max_w,
             "ref_kwh": self._ref_kwh,
+            "run_start": self._run_start,
+            "start_announced": self._start_announced,
         }
 
     @classmethod
@@ -264,4 +294,7 @@ class SessionTracker:
         tracker._counter_ref = tuple(ref) if ref else None
         tracker._ref_max_w = d.get("ref_max_w")
         tracker._ref_kwh = d.get("ref_kwh", 0.0)
+        tracker._run_start = d.get("run_start")
+        # Saved by v1: a session already open was charging before, do not announce it.
+        tracker._start_announced = d.get("start_announced", tracker._session is not None)
         return tracker

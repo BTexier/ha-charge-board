@@ -378,3 +378,88 @@ def test_long_counter_dropout_to_zero_is_not_counted_twice(minutes):
     done = run(make_tracker(), at(0), at(6), make)
     assert len(done) == 1
     assert done[0].energy_kwh == pytest.approx(8.6, abs=0.1)
+
+
+# --- Transitions (notifications) ------------------------------------------------------------
+
+
+def events(tracker, start, end, make, vehicle="twingo"):
+    """Like run, but collect (kind, t) of the events emitted after each feed."""
+    out = []
+    t = start
+    while t <= end:
+        tracker.feed(make(t), vehicle)
+        out += [(e.kind, e.t) for e in tracker.pop_events()]
+        t += 30
+    return out
+
+
+def test_night_announces_plug_start_and_unplug_once():
+    ev = events(make_tracker(), at(21, 50), at(8, 10, 1), night)
+    assert [k for k, _ in ev] == ["plugged", "started", "unplugged"]
+    assert ev[0][1] == at(21, 58)
+    assert ev[1][1] == at(22, 5)  # 5 min of continuous charging; the 07:43 top-up adds nothing
+    assert ev[2][1] == at(7, 58, 1)
+
+
+def test_unplugged_event_carries_the_finished_session():
+    tracker = make_tracker()
+    t = at(21, 50)
+    while t <= at(8, 10, 1):
+        finished = tracker.feed(night(t), "twingo")
+        last = tracker.pop_events()
+        t += 30
+        if last and last[-1].kind == "unplugged":
+            assert last[-1].session is finished
+            return
+    pytest.fail("no unplugged event")
+
+
+def test_short_burst_at_plug_in_is_not_a_start():
+    def make(t):
+        burst = at(19, 51) <= t < at(19, 52)  # 1 min of charging at plug-in
+        charging = burst or at(22) <= t < at(23)
+        return Sample(t=t, power_w=2200 if charging else 0, plugged=t >= at(19, 50))
+
+    ev = events(make_tracker(), at(19, 45), at(23, 30), make)
+    assert ("started", at(22, 5)) in ev
+    assert [k for k, _ in ev].count("started") == 1
+
+
+def test_plug_entity_blip_is_not_a_new_plug():
+    def make(t):
+        return Sample(t=t, power_w=0, plugged=None if t == at(20, 0) else t >= at(19))
+
+    ev = events(make_tracker(), at(18, 50), at(20, 30), make)
+    assert ev == [("plugged", at(19))]
+
+
+def test_restored_open_session_is_not_announced_again():
+    tracker = make_tracker()
+    events(tracker, at(21, 50), at(23), night)  # plugged + started already emitted
+    d = json.loads(json.dumps(tracker.to_dict()))
+    restored = SessionTracker.from_dict(d, tracker.settings, lambda: "x")
+    assert events(restored, at(23) + 30, at(4), night) == []
+
+
+def test_v1_state_with_open_session_counts_as_announced():
+    tracker = make_tracker()
+    events(tracker, at(21, 50), at(23), night)
+    d = json.loads(json.dumps(tracker.to_dict()))
+    del d["start_announced"], d["run_start"]
+    restored = SessionTracker.from_dict(d, tracker.settings, lambda: "x")
+    assert [k for k, _ in events(restored, at(23) + 30, at(8, 10, 1), night)] == ["unplugged"]
+
+
+def test_dropped_empty_session_emits_no_unplugged():
+    def make(t):
+        return Sample(
+            t=t,
+            power_w=200 if at(19) <= t < at(19, 6) else 0,
+            energy_kwh=0.0,
+            plugged=at(18, 59) <= t < at(19, 30),
+        )
+
+    # Counter stuck at 0: the session is dropped (< 0.01 kWh), but 6 min of charging => started.
+    ev = events(make_tracker(), at(18, 50), at(19, 40), make)
+    assert [k for k, _ in ev] == ["plugged", "started"]
