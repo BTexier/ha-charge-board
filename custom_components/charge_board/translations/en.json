@@ -23,12 +23,15 @@
           "off_peak_windows": "Off-peak windows",
           "overview_style": "Overview style",
           "notify_service": "Phone to notify",
-          "notifications": "Notifications"
+          "notifications": "Notifications",
+          "fuel_price_entity": "Petrol price (entity)",
+          "fuel_price": "Fixed petrol price (per litre)"
         },
         "data_description": {
           "price_entity": "Takes precedence over the fixed prices.",
           "off_peak_windows": "For example 22:00-06:00, several separated by commas. Ignored when an off-peak binary sensor is set.",
-          "notify_service": "The Home Assistant app on this phone receives plug-in, start and unplug (with the session summary) notifications. Empty: no notification; the charge_board_* events are fired anyway."
+          "notify_service": "The Home Assistant app on this phone receives plug-in, start and unplug (with the session summary) notifications. Empty: no notification; the charge_board_* events are fired anyway.",
+          "fuel_price_entity": "For example a station of the Prix Carburant integration. Takes precedence over the fixed price."
         }
       }
     },
@@ -60,7 +63,7 @@
             "energy_entity": "Session or total energy counter of the charger; when set, session energy comes from it.",
             "plug_entity": "Binary sensor, or a sensor with the states below.",
             "plugged_states": "Leave empty for a binary sensor (on = plugged in).",
-            "switch_entity": "Not used yet.",
+            "switch_entity": "Turned off by Charge Board when a home objective is reached (needs the plug entity).",
             "power_threshold_w": "Charging when the power is above this value.",
             "gap_hours": "Without a plug entity, a session ends after this long without charging."
           }
@@ -82,7 +85,7 @@
             "energy_entity": "Session or total energy counter of the charger; when set, session energy comes from it.",
             "plug_entity": "Binary sensor, or a sensor with the states below.",
             "plugged_states": "Leave empty for a binary sensor (on = plugged in).",
-            "switch_entity": "Not used yet.",
+            "switch_entity": "Turned off by Charge Board when a home objective is reached (needs the plug entity).",
             "power_threshold_w": "Charging when the power is above this value.",
             "gap_hours": "Without a plug entity, a session ends after this long without charging."
           }
@@ -105,11 +108,16 @@
             "capacity_kwh": "Usable capacity",
             "soc_entity": "Battery level",
             "target_entity": "Target level entity",
-            "target_fixed": "Fixed target level"
+            "target_fixed": "Fixed target level",
+            "target_source": "Objective source",
+            "odometer_entity": "Odometer",
+            "fuel_l100": "Reference petrol consumption"
           },
           "data_description": {
             "soc_entity": "Sensor in %. Without it, sessions have no start and end level.",
-            "target_fixed": "Used when no target entity is set."
+            "target_fixed": "Used when no target entity is set.",
+            "target_source": "Vehicle: the car stops by itself at its own objective. Home: Charge Board turns the charger's switch off when the objective is reached.",
+            "fuel_l100": "Litres per 100 km of a comparable petrol car, for the Statistics comparison."
           }
         },
         "reconfigure": {
@@ -119,11 +127,16 @@
             "capacity_kwh": "Usable capacity",
             "soc_entity": "Battery level",
             "target_entity": "Target level entity",
-            "target_fixed": "Fixed target level"
+            "target_fixed": "Fixed target level",
+            "target_source": "Objective source",
+            "odometer_entity": "Odometer",
+            "fuel_l100": "Reference petrol consumption"
           },
           "data_description": {
             "soc_entity": "Sensor in %. Without it, sessions have no start and end level.",
-            "target_fixed": "Used when no target entity is set."
+            "target_fixed": "Used when no target entity is set.",
+            "target_source": "Vehicle: the car stops by itself at its own objective. Home: Charge Board turns the charger's switch off when the objective is reached.",
+            "fuel_l100": "Litres per 100 km of a comparable petrol car, for the Statistics comparison."
           }
         }
       },
@@ -144,6 +157,12 @@
         "plugged": "Plugged in",
         "started": "Charging started",
         "unplugged": "Unplugged (summary)"
+      }
+    },
+    "target_source": {
+      "options": {
+        "vehicle": "The vehicle (it stops by itself)",
+        "home": "Home (Charge Board stops the charge)"
       }
     }
   },

@@ -491,3 +491,17 @@ def test_stale_power_after_unplug_opens_no_phantom_session():
     assert len(done) == 2
     assert done[1].plugged_at == at(21)
     assert done[1].charge_start == at(21, 1)
+
+
+def test_odometer_start_and_end_follow_the_session():
+    def make(t):
+        return Sample(
+            t=t,
+            power_w=2200 if at(22) <= t < at(23) else 0,
+            plugged=at(21) <= t < at(23, 30),
+            odometer=1000.0 if t < at(22, 30) else 1012.0,
+        )
+
+    (done,) = run(make_tracker(), at(20, 50), at(23, 40), make)
+    assert done.odometer_start == 1000.0
+    assert done.odometer_end == 1012.0

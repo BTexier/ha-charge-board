@@ -147,6 +147,8 @@ class Hub:
         for cid, tracker in self.trackers.items():
             finished = tracker.feed(self.sample_for(cid), self.vehicle_for(cid))
             if finished is not None:
+                finished.fuel_price = self.fuel_price()
+                finished.fuel_l100 = (self.vehicles.get(finished.vehicle_id) or {}).get("fuel_l100")
                 self.entry.async_create_task(self.hass, self.store.async_add(finished))
             self.store.trackers_state[cid] = tracker.to_dict()
             for event in tracker.pop_events():
@@ -207,6 +209,19 @@ class Hub:
         except Exception as err:  # noqa: BLE001 - a notification must never break recording
             LOGGER.warning("Charge Board could not notify %s: %s", service, err)
 
+    def target_source(self, vehicle_id: str | None) -> str:
+        """ "vehicle" (the car stops by itself) or "home" (Charge Board cuts the charge).
+
+        Vehicles saved before the setting: an objective entity means the car's own.
+        """
+        v = self.vehicles.get(vehicle_id) or {}
+        return v.get("target_source") or ("vehicle" if v.get("target_entity") else "home")
+
+    def fuel_price(self) -> float | None:
+        """Price per litre: the station entity when it reads a number, else the fixed one."""
+        price = self._number(self.options.get("fuel_price_entity"))
+        return self.options.get("fuel_price") if price is None else price
+
     def target_for(self, vehicle_id: str | None) -> float | None:
         """Target level: the target entity when it reads a number, else the fixed target."""
         v = self.vehicles.get(vehicle_id) or {}
@@ -237,6 +252,7 @@ class Hub:
             price=self._price(off_peak),
             off_peak=off_peak,
             soc=self._number(vehicle.get("soc_entity")),
+            odometer=self._number(vehicle.get("odometer_entity")),
         )
 
     def live(self, charger_id: str) -> dict:

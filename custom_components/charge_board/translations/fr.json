@@ -23,12 +23,15 @@
           "off_peak_windows": "Plages heures creuses",
           "overview_style": "Style de l'aperçu",
           "notify_service": "Téléphone à notifier",
-          "notifications": "Notifications actives"
+          "notifications": "Notifications actives",
+          "fuel_price_entity": "Prix de l'essence (entité)",
+          "fuel_price": "Prix de l'essence fixe (par litre)"
         },
         "data_description": {
           "price_entity": "Prioritaire sur les prix fixes.",
           "off_peak_windows": "Par exemple 22:00-06:00, plusieurs séparées par des virgules. Ignorées si un capteur binaire heures creuses est choisi.",
-          "notify_service": "L'application Home Assistant de ce téléphone reçoit le branchement, le démarrage et le débranchement (avec le résumé de la session). Vide : aucune notification ; les événements charge_board_* sont émis quand même."
+          "notify_service": "L'application Home Assistant de ce téléphone reçoit le branchement, le démarrage et le débranchement (avec le résumé de la session). Vide : aucune notification ; les événements charge_board_* sont émis quand même.",
+          "fuel_price_entity": "Par exemple une station de l'intégration Prix Carburant. Prioritaire sur le prix fixe."
         }
       }
     },
@@ -60,7 +63,7 @@
             "energy_entity": "Compteur d'énergie du chargeur (session ou cumulé) ; s'il est renseigné, l'énergie de la session en vient.",
             "plug_entity": "Capteur binaire, ou capteur avec les états ci-dessous.",
             "plugged_states": "Laisser vide pour un capteur binaire (on = branché).",
-            "switch_entity": "Pas encore utilisé.",
+            "switch_entity": "Coupé par Charge Board quand un objectif maison est atteint (nécessite l'entité de branchement).",
             "power_threshold_w": "En charge quand la puissance dépasse cette valeur.",
             "gap_hours": "Sans entité de branchement, la session se termine après cette durée sans charge."
           }
@@ -82,7 +85,7 @@
             "energy_entity": "Compteur d'énergie du chargeur (session ou cumulé) ; s'il est renseigné, l'énergie de la session en vient.",
             "plug_entity": "Capteur binaire, ou capteur avec les états ci-dessous.",
             "plugged_states": "Laisser vide pour un capteur binaire (on = branché).",
-            "switch_entity": "Pas encore utilisé.",
+            "switch_entity": "Coupé par Charge Board quand un objectif maison est atteint (nécessite l'entité de branchement).",
             "power_threshold_w": "En charge quand la puissance dépasse cette valeur.",
             "gap_hours": "Sans entité de branchement, la session se termine après cette durée sans charge."
           }
@@ -105,11 +108,16 @@
             "capacity_kwh": "Capacité utile",
             "soc_entity": "Niveau de batterie",
             "target_entity": "Entité du niveau visé",
-            "target_fixed": "Niveau visé fixe"
+            "target_fixed": "Niveau visé fixe",
+            "target_source": "Source de l'objectif",
+            "odometer_entity": "Compteur kilométrique",
+            "fuel_l100": "Consommation essence de référence"
           },
           "data_description": {
             "soc_entity": "Capteur en %. Sans lui, les sessions n'ont pas de niveau de départ ni d'arrivée.",
-            "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie."
+            "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie.",
+            "target_source": "Le véhicule : la voiture s'arrête seule à son objectif. La maison : Charge Board coupe l'interrupteur du chargeur quand l'objectif est atteint.",
+            "fuel_l100": "Litres aux 100 km d'une voiture essence comparable, pour la comparaison des Statistiques."
           }
         },
         "reconfigure": {
@@ -119,11 +127,16 @@
             "capacity_kwh": "Capacité utile",
             "soc_entity": "Niveau de batterie",
             "target_entity": "Entité du niveau visé",
-            "target_fixed": "Niveau visé fixe"
+            "target_fixed": "Niveau visé fixe",
+            "target_source": "Source de l'objectif",
+            "odometer_entity": "Compteur kilométrique",
+            "fuel_l100": "Consommation essence de référence"
           },
           "data_description": {
             "soc_entity": "Capteur en %. Sans lui, les sessions n'ont pas de niveau de départ ni d'arrivée.",
-            "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie."
+            "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie.",
+            "target_source": "Le véhicule : la voiture s'arrête seule à son objectif. La maison : Charge Board coupe l'interrupteur du chargeur quand l'objectif est atteint.",
+            "fuel_l100": "Litres aux 100 km d'une voiture essence comparable, pour la comparaison des Statistiques."
           }
         }
       },
@@ -144,6 +157,12 @@
         "plugged": "Branchement",
         "started": "Démarrage de la charge",
         "unplugged": "Débranchement (résumé)"
+      }
+    },
+    "target_source": {
+      "options": {
+        "vehicle": "Le véhicule (il s'arrête seul)",
+        "home": "La maison (Charge Board coupe la charge)"
       }
     }
   },

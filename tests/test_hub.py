@@ -282,3 +282,58 @@ async def test_restart_with_plug_unavailable_first_sends_nothing(hass, freezer):
     assert len(calls) == sent
     cid = next(iter(entry.runtime_data.chargers))
     assert entry.runtime_data.live(cid)["session"]  # the session is still the same open one
+
+
+# --- Fuel price, odometer, target source ----------------------------------------------------
+
+
+async def test_closed_session_freezes_fuel_price_and_reference(hass, freezer):
+    hass.states.async_set("sensor.p", "2200", {"unit_of_measurement": "W"})
+    hass.states.async_set("binary_sensor.plug", "on")
+    hass.states.async_set("sensor.km", "577")
+    entry = MockConfigEntry(
+        domain="charge_board",
+        options={"off_peak_price": 0.2, "peak_price": 0.2, "fuel_price": 1.86},
+        subentries_data=[
+            {"data": CHARGER, "subentry_type": "charger", "title": "Dé", "unique_id": None},
+            {
+                "data": {**VEHICLE, "odometer_entity": "sensor.km", "fuel_l100": 6},
+                "subentry_type": "vehicle",
+                "title": "Twingo",
+                "unique_id": None,
+            },
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 600)
+    hass.states.async_set("sensor.p", "0", {"unit_of_measurement": "W"})
+    freezer.tick(5)
+    hass.states.async_set("binary_sensor.plug", "off")
+    await hass.async_block_till_done()
+    (s,) = entry.runtime_data.store.sessions
+    assert (s.fuel_price, s.fuel_l100) == (1.86, 6)
+    assert s.odometer_start == s.odometer_end == 577
+
+
+async def test_target_source_defaults(hass, setup):
+    entry, _cid = setup
+    hub = entry.runtime_data
+    twingo, zoe = (s.subentry_id for s in entry.subentries.values() if s.subentry_type == "vehicle")
+    hub.vehicles[twingo]["target_entity"] = "number.target"
+    assert hub.target_source(twingo) == "vehicle"
+    assert hub.target_source(zoe) == "home"
+    hub.vehicles[twingo]["target_source"] = "home"
+    assert hub.target_source(twingo) == "home"
+
+
+async def test_fuel_price_prefers_the_entity(hass, setup):
+    entry, _cid = setup
+    hub = entry.runtime_data
+    assert hub.fuel_price() is None
+    hub.options["fuel_price"] = 1.9
+    assert hub.fuel_price() == 1.9
+    hub.options["fuel_price_entity"] = "sensor.station"
+    hass.states.async_set("sensor.station", "1.789")
+    assert hub.fuel_price() == 1.789

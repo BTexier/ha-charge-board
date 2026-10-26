@@ -137,3 +137,19 @@ async def test_options_flow_keeps_a_phone_that_left_home_assistant(hass):
         result["flow_id"], {"notify_service": "mobile_app_old", "peak_price": 0.2}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_vehicle_flow_accepts_odometer_fuel_and_source(hass):
+    entry = MockConfigEntry(domain="charge_board")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    data = {
+        "name": "Twingo",
+        "capacity_kwh": 27.5,
+        "odometer_entity": "sensor.twingo_km",
+        "fuel_l100": 6,
+        "target_source": "vehicle",
+    }
+    await _subentry(hass, entry, "vehicle", data)
+    (sub,) = entry.subentries.values()
+    assert {k: sub.data[k] for k in data} == data

@@ -23,6 +23,7 @@ from .const import (
     OVERVIEW_STYLES,
     SUBENTRY_CHARGER,
     SUBENTRY_VEHICLE,
+    TARGET_SOURCES,
 )
 from .hub import parse_windows
 
@@ -60,6 +61,11 @@ VEHICLE_SCHEMA = vol.Schema(
         vol.Optional("soc_entity"): _entity("sensor"),
         vol.Optional("target_entity"): _entity("number", "input_number", "sensor"),
         vol.Optional("target_fixed", default=DEFAULT_TARGET): _number(1, "%", 100),
+        vol.Optional("target_source"): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=TARGET_SOURCES, translation_key="target_source")
+        ),
+        vol.Optional("odometer_entity"): _entity("sensor"),
+        vol.Optional("fuel_l100"): _number(0.1, "L/100 km", 30),
     }
 )
 
@@ -70,6 +76,8 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional("peak_price"): _number("any", max_=10),
         vol.Optional("off_peak_entity"): _entity("binary_sensor", "input_boolean"),
         vol.Optional("off_peak_windows"): str,
+        vol.Optional("fuel_price_entity"): _entity("sensor", "input_number"),
+        vol.Optional("fuel_price"): _number("any", max_=10),
         vol.Optional("overview_style", default="detailed"): selector.SelectSelector(
             selector.SelectSelectorConfig(options=OVERVIEW_STYLES, translation_key="overview_style")
         ),

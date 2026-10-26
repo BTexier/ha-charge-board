@@ -14,6 +14,7 @@ CURVE_WINDOW_MAX_S = CURVE_STEP_S + 2 * TICK_SECONDS
 DEFAULT_TARGET = 100
 # A charge is announced as started after this much continuous charging (not a plug-in burst).
 STARTED_MIN_S = 300
+TARGET_SOURCES = ["vehicle", "home"]
 OVERVIEW_STYLES = ["detailed", "compact"]
 SUBENTRY_CHARGER = "charger"
 SUBENTRY_VEHICLE = "vehicle"

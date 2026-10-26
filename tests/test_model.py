@@ -43,3 +43,8 @@ def test_unknown_nested_keys_are_ignored():
     d["curve"][0]["future"] = 1
     s = Session.from_dict(d)
     assert s.by_price == {"0.1": TariffSlice(1.0)} and s.curve == [CurvePoint(1.0, 2.0)]
+
+
+def test_old_session_reads_without_new_fields():
+    s = Session.from_dict({"id": "x", "charger_id": "c", "energy_kwh": 3.0})
+    assert (s.odometer_start, s.odometer_end, s.fuel_price, s.fuel_l100) == (None,) * 4

@@ -36,6 +36,10 @@ class Session:
     has_off_peak_source: bool = False
     soc_start: float | None = None
     soc_end: float | None = None
+    odometer_start: float | None = None  # km
+    odometer_end: float | None = None
+    fuel_price: float | None = None  # per litre, at the close (fuel comparison)
+    fuel_l100: float | None = None  # the vehicle's reference consumption at the close
     curve: list[CurvePoint] = field(default_factory=list)
     estimated: bool = False
     edited: bool = False

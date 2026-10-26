@@ -20,6 +20,7 @@ class Sample:
     price: float | None = None
     off_peak: bool | None = None
     soc: float | None = None
+    odometer: float | None = None
 
 
 @dataclass
@@ -254,6 +255,10 @@ class SessionTracker:
             self._ref_max_w, self._ref_kwh = None, 0.0
         if sample.power_w is not None:
             self._ref_max_w = max(self._ref_max_w or 0.0, sample.power_w)
+        if self._session is not None and sample.odometer is not None:
+            if self._session.odometer_start is None:
+                self._session.odometer_start = sample.odometer
+            self._session.odometer_end = sample.odometer
         if self._plugged is False:
             self._soc = None  # unplugged: the next car's level is unknown until it reports
         elif sample.soc is not None:
