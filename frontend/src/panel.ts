@@ -18,7 +18,7 @@ const TABS: Record<Tab, Key> = {
   stats: "tab_stats",
 };
 
-/** Sidebar panel "Recharge": toolbar, tabs, and the selected tab. */
+/** Sidebar panel "EVChargeData": toolbar, tabs, and the selected tab. */
 class ChargeBoardPanel extends LitElement {
   static properties = {
     hass: { attribute: false },

@@ -1,18 +1,18 @@
-# Charge Board
+# EVChargeData
 
 [English](#english) · [Français](#français)
 
 ## English
 
-Charge Board is a Home Assistant custom integration (domain `charge_board`) that records EV charging sessions and shows them in a sidebar panel called "Recharge". It is inspired by [WashData](https://github.com/3dg1luk43/ha_washdata), which does the same for washing machine cycles. It reads entities you already have (charger power and energy, plug state, battery level, tariff), records each session (energy, cost, battery start/end, times, power curve), and offers a panel with an **Overview** tab (one card per charger) and a **Sessions** tab (filters, monthly summary, list, detail). Sessions can be corrected from the panel.
+EVChargeData is a Home Assistant custom integration (domain `charge_board`) that records EV charging sessions and shows them in a sidebar panel called "EVChargeData". It is inspired by [WashData](https://github.com/3dg1luk43/ha_washdata), which does the same for washing machine cycles. It reads entities you already have (charger power and energy, plug state, battery level, tariff), records each session (energy, cost, battery start/end, times, power curve), and offers a panel with an **Overview** tab (one card per charger) and a **Sessions** tab (filters, monthly summary, list, detail). Sessions can be corrected from the panel.
 
-It does **not** control anything: no charge control or power regulation, no solar surplus charging, no scheduling. Use your charger's integration or [evcc](https://evcc.io) for that.
+It does not regulate the charge: no power regulation, no solar surplus charging, no scheduling (use your charger's integration or [evcc](https://evcc.io) for that). Its only action is optional: stopping the charge at a home target.
 
 ### Installation
 
 1. In HACS, add a custom repository: `https://github.com/BTexier/ha-charge-board`, category **Integration**.
-2. Install Charge Board and restart Home Assistant (minimum version: 2025.6.0).
-3. Go to Settings → Devices & services → Add integration → **Charge Board**.
+2. Install EVChargeData and restart Home Assistant (minimum version: 2025.6.0).
+3. Go to Settings → Devices & services → Add integration → **EVChargeData**.
 
 ### Configuration
 
@@ -67,7 +67,7 @@ In the integration options, pick the **phone to notify** (any `notify.mobile_app
 - **Charging started**: once per session, after 5 minutes of continuous charging (a few seconds at plug-in do not count).
 - **Unplugged**: the session summary (energy, cost, off-peak share, battery, charging and plugged-in time).
 
-Tapping a notification opens the Recharge panel. The texts follow Home Assistant's language (French, otherwise English).
+Tapping a notification opens the EVChargeData panel. The texts follow Home Assistant's language (French, otherwise English).
 
 The same moments are fired as events whatever the notification settings, for your own automations: `charge_board_plugged` (`soc`, `target`), `charge_board_started` (`charge_start`, `soc`) and `charge_board_unplugged` (`session`, the full recorded session). All carry `charger_id`, `charger_name`, `vehicle_id` and `vehicle_name`.
 
@@ -81,7 +81,7 @@ The **Statistics** tab answers what charging costs, month by month, for one vehi
 
 Distances come from Home Assistant's long-term statistics of the vehicle's **odometer** (vehicle setting; the sensor needs a `state_class`). A month the statistics do not fully cover shows "—" for the per-100-km figures.
 
-The petrol comparison uses the vehicle's **reference petrol consumption** (L/100 km) and the **petrol price** of the Charge Board options: a sensor (for example a station of the Prix Carburant integration) or a fixed price. Both are recorded in each session, so changing them later does not rewrite past months.
+The petrol comparison uses the vehicle's **reference petrol consumption** (L/100 km) and the **petrol price** of the EVChargeData options: a sensor (for example a station of the Prix Carburant integration) or a fixed price. Both are recorded in each session, so changing them later does not rewrite past months.
 
 ### Vehicles
 
@@ -93,8 +93,8 @@ Each vehicle also gets a sensor **Consumption since charge** (`sensor.<vehicle>_
 
 The **target source** of a vehicle is either:
 
-- **the vehicle**: the target entity is the car's own setting; the car stops by itself, Charge Board only shows it;
-- **home**: a helper (`input_number`) or the fixed target. When the plugged-in vehicle reaches it, Charge Board turns the charger's **charging switch** off and fires `charge_board_target_reached` (`charger_id`, `vehicle_id`, `soc`, `target`). It turns the switch back on at unplug. A switch turned back on by hand stays on until the unplug.
+- **the vehicle**: the target entity is the car's own setting; the car stops by itself, EVChargeData only shows it;
+- **home**: a helper (`input_number`) or the fixed target. When the plugged-in vehicle reaches it, EVChargeData turns the charger's **charging switch** off and fires `charge_board_target_reached` (`charger_id`, `vehicle_id`, `soc`, `target`). It turns the switch back on at unplug. A switch turned back on by hand stays on until the unplug.
 
 The cut needs both a **plug entity** and a **charging switch** on the charger; without them the Vehicles card says the home target has no effect.
 
@@ -123,15 +123,15 @@ The charger is a dé charger driven by the `tuya_ev_charger` integration.
 
 ## Français
 
-Charge Board est une intégration personnalisée Home Assistant (domaine `charge_board`) qui enregistre les sessions de recharge de véhicules électriques et les affiche dans un panneau de la barre latérale nommé « Recharge ». Elle s'inspire de [WashData](https://github.com/3dg1luk43/ha_washdata), qui fait la même chose pour les cycles de lave-linge. Elle lit des entités que vous avez déjà (puissance et énergie du chargeur, branchement, niveau de batterie, tarif), enregistre chaque session (énergie, coût, batterie départ/arrivée, heures, courbe de puissance) et propose un panneau avec un onglet **Aperçu** (une carte par chargeur) et un onglet **Sessions** (filtres, bandeau du mois, liste, détail). Les sessions se corrigent depuis le panneau.
+EVChargeData est une intégration personnalisée Home Assistant (domaine `charge_board`) qui enregistre les sessions de recharge de véhicules électriques et les affiche dans un panneau de la barre latérale nommé « EVChargeData ». Elle s'inspire de [WashData](https://github.com/3dg1luk43/ha_washdata), qui fait la même chose pour les cycles de lave-linge. Elle lit des entités que vous avez déjà (puissance et énergie du chargeur, branchement, niveau de batterie, tarif), enregistre chaque session (énergie, coût, batterie départ/arrivée, heures, courbe de puissance) et propose un panneau avec un onglet **Aperçu** (une carte par chargeur) et un onglet **Sessions** (filtres, bandeau du mois, liste, détail). Les sessions se corrigent depuis le panneau.
 
-Elle ne **pilote rien** : pas de commande ni de régulation de la charge, pas de charge au surplus solaire, pas de planification. Utilisez l'intégration de votre chargeur ou [evcc](https://evcc.io) pour cela.
+Elle ne régule pas la charge : pas de régulation de puissance, pas de charge au surplus solaire, pas de planification (utilisez l'intégration de votre chargeur ou [evcc](https://evcc.io)). Sa seule action est optionnelle : couper la charge à un objectif maison.
 
 ### Installation
 
 1. Dans HACS, ajouter un dépôt personnalisé : `https://github.com/BTexier/ha-charge-board`, catégorie **Intégration**.
-2. Installer Charge Board et redémarrer Home Assistant (version minimale : 2025.6.0).
-3. Paramètres → Appareils et services → Ajouter une intégration → **Charge Board**.
+2. Installer EVChargeData et redémarrer Home Assistant (version minimale : 2025.6.0).
+3. Paramètres → Appareils et services → Ajouter une intégration → **EVChargeData**.
 
 ### Configuration
 
@@ -186,7 +186,7 @@ Dans les options de l'intégration, choisir le **téléphone à notifier** (un s
 - **Démarrage de la charge** : une fois par session, après 5 minutes de charge continue (quelques secondes au branchement ne comptent pas).
 - **Débranchement** : le résumé de la session (énergie, coût, part en heures creuses, batterie, durées de charge et de branchement).
 
-Toucher une notification ouvre le panneau Recharge. Les textes suivent la langue de Home Assistant (français, sinon anglais).
+Toucher une notification ouvre le panneau EVChargeData. Les textes suivent la langue de Home Assistant (français, sinon anglais).
 
 Les mêmes moments sont émis en événements, quels que soient les réglages de notification, pour vos propres automatisations : `charge_board_plugged` (`soc`, `target`), `charge_board_started` (`charge_start`, `soc`) et `charge_board_unplugged` (`session`, la session enregistrée complète). Tous portent `charger_id`, `charger_name`, `vehicle_id` et `vehicle_name`.
 
@@ -200,7 +200,7 @@ L'onglet **Statistiques** dit ce que coûte la recharge, mois par mois, pour un 
 
 Les distances viennent des statistiques long terme de Home Assistant pour le **compteur kilométrique** du véhicule (réglage du véhicule ; le capteur doit avoir un `state_class`). Un mois que ces statistiques ne couvrent pas entièrement affiche « — » pour les chiffres aux 100 km.
 
-La comparaison essence utilise la **consommation essence de référence** du véhicule (L/100 km) et le **prix de l'essence** des options de Charge Board : un capteur (par exemple une station de l'intégration Prix Carburant) ou un prix fixe. Les deux sont enregistrés dans chaque session : les changer ensuite ne réécrit pas les mois passés.
+La comparaison essence utilise la **consommation essence de référence** du véhicule (L/100 km) et le **prix de l'essence** des options de EVChargeData : un capteur (par exemple une station de l'intégration Prix Carburant) ou un prix fixe. Les deux sont enregistrés dans chaque session : les changer ensuite ne réécrit pas les mois passés.
 
 ### Véhicules
 
@@ -212,8 +212,8 @@ Chaque véhicule a aussi un capteur **Consommation depuis la recharge** (`sensor
 
 La **source de l'objectif** d'un véhicule est :
 
-- **le véhicule** : l'entité d'objectif est le réglage de la voiture ; elle s'arrête seule, Charge Board se contente de l'afficher ;
-- **la maison** : une aide (`input_number`) ou l'objectif fixe. Quand le véhicule branché l'atteint, Charge Board coupe l'**interrupteur de charge** du chargeur et émet `charge_board_target_reached` (`charger_id`, `vehicle_id`, `soc`, `target`). Il le rallume au débranchement. Un interrupteur rallumé à la main reste allumé jusqu'au débranchement.
+- **le véhicule** : l'entité d'objectif est le réglage de la voiture ; elle s'arrête seule, EVChargeData se contente de l'afficher ;
+- **la maison** : une aide (`input_number`) ou l'objectif fixe. Quand le véhicule branché l'atteint, EVChargeData coupe l'**interrupteur de charge** du chargeur et émet `charge_board_target_reached` (`charger_id`, `vehicle_id`, `soc`, `target`). Il le rallume au débranchement. Un interrupteur rallumé à la main reste allumé jusqu'au débranchement.
 
 La coupure demande une **entité de branchement** et un **interrupteur de charge** sur le chargeur ; sans eux, la fiche Véhicules signale que l'objectif maison est sans effet.
 

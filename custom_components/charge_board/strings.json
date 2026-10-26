@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Charge Board",
+        "title": "EVChargeData",
         "description": "Records EV charging sessions from your existing entities. Add chargers and vehicles afterwards from the integration page."
       }
     },
     "abort": {
-      "single_instance_allowed": "Charge Board is already configured."
+      "single_instance_allowed": "EVChargeData is already configured."
     }
   },
   "options": {
@@ -63,7 +63,7 @@
             "energy_entity": "Session or total energy counter of the charger; when set, session energy comes from it.",
             "plug_entity": "Binary sensor, or a sensor with the states below.",
             "plugged_states": "Leave empty for a binary sensor (on = plugged in).",
-            "switch_entity": "Turned off by Charge Board when a home objective is reached (needs the plug entity).",
+            "switch_entity": "Turned off by EVChargeData when a home objective is reached (needs the plug entity).",
             "power_threshold_w": "Charging when the power is above this value.",
             "gap_hours": "Without a plug entity, a session ends after this long without charging."
           }
@@ -85,7 +85,7 @@
             "energy_entity": "Session or total energy counter of the charger; when set, session energy comes from it.",
             "plug_entity": "Binary sensor, or a sensor with the states below.",
             "plugged_states": "Leave empty for a binary sensor (on = plugged in).",
-            "switch_entity": "Turned off by Charge Board when a home objective is reached (needs the plug entity).",
+            "switch_entity": "Turned off by EVChargeData when a home objective is reached (needs the plug entity).",
             "power_threshold_w": "Charging when the power is above this value.",
             "gap_hours": "Without a plug entity, a session ends after this long without charging."
           }
@@ -116,7 +116,7 @@
           "data_description": {
             "soc_entity": "Sensor in %. Without it, sessions have no start and end level.",
             "target_fixed": "Used when no target entity is set.",
-            "target_source": "Vehicle: the car stops by itself at its own objective. Home: Charge Board turns the charger's switch off when the objective is reached.",
+            "target_source": "Vehicle: the car stops by itself at its own objective. Home: EVChargeData turns the charger's switch off when the objective is reached.",
             "fuel_l100": "Litres per 100 km of a comparable petrol car, for the Statistics comparison."
           }
         },
@@ -135,7 +135,7 @@
           "data_description": {
             "soc_entity": "Sensor in %. Without it, sessions have no start and end level.",
             "target_fixed": "Used when no target entity is set.",
-            "target_source": "Vehicle: the car stops by itself at its own objective. Home: Charge Board turns the charger's switch off when the objective is reached.",
+            "target_source": "Vehicle: the car stops by itself at its own objective. Home: EVChargeData turns the charger's switch off when the objective is reached.",
             "fuel_l100": "Litres per 100 km of a comparable petrol car, for the Statistics comparison."
           }
         }
@@ -162,7 +162,7 @@
     "target_source": {
       "options": {
         "vehicle": "The vehicle (it stops by itself)",
-        "home": "Home (Charge Board stops the charge)"
+        "home": "Home (EVChargeData stops the charge)"
       }
     }
   },

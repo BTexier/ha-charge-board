@@ -86,7 +86,7 @@ class Hub:
         first = next(iter(self.vehicles), None)
         self.selected: dict[str, str | None] = dict.fromkeys(self.chargers, first)
         self.trackers: dict[str, SessionTracker] = {}
-        # Charge Board turned the charger's switch off at a home objective (until unplug).
+        # EVChargeData turned the charger's switch off at a home objective (until unplug).
         self.cut: dict[str, bool] = {}
         o = self.options
         self.priced = bool(o.get("price_entity")) or any(
@@ -207,7 +207,7 @@ class Hub:
         ):
             return False
         self.cut[charger_id] = True
-        LOGGER.info("Charge Board stops %s at the home target %s %%", c["name"], target)
+        LOGGER.info("EVChargeData stops %s at the home target %s %%", c["name"], target)
         self._switch(switch, "turn_off")
         self.hass.bus.async_fire(
             f"{EVENT_PREFIX}target_reached",
@@ -223,7 +223,7 @@ class Hub:
                     "switch", service, {"entity_id": entity_id}, blocking=True
                 )
             except Exception as err:  # noqa: BLE001 - must never break recording
-                LOGGER.warning("Charge Board could not %s %s: %s", service, entity_id, err)
+                LOGGER.warning("EVChargeData could not %s %s: %s", service, entity_id, err)
 
         self.entry.async_create_background_task(self.hass, call(), f"{DOMAIN} {service}")
 
@@ -273,7 +273,7 @@ class Hub:
                 blocking=True,
             )
         except Exception as err:  # noqa: BLE001 - a notification must never break recording
-            LOGGER.warning("Charge Board could not notify %s: %s", service, err)
+            LOGGER.warning("EVChargeData could not notify %s: %s", service, err)
 
     async def async_km_by_month(
         self, vehicle_id: str | None, months: list[str]
@@ -344,7 +344,7 @@ class Hub:
         return next((s for s in self.store.sessions if s.vehicle_id == vehicle_id), None)
 
     def target_source(self, vehicle_id: str | None) -> str:
-        """ "vehicle" (the car stops by itself) or "home" (Charge Board cuts the charge).
+        """ "vehicle" (the car stops by itself) or "home" (EVChargeData cuts the charge).
 
         Vehicles saved before the setting: an objective entity means the car's own.
         """

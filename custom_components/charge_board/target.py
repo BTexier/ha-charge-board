@@ -1,4 +1,4 @@
-"""When Charge Board stops a charge at a home objective (pure, no Home Assistant imports)."""
+"""When EVChargeData stops a charge at a home objective (pure, no Home Assistant imports)."""
 
 from __future__ import annotations
 

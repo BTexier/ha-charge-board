@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Charge Board",
+        "title": "EVChargeData",
         "description": "Enregistre les sessions de recharge de véhicules électriques à partir de vos entités existantes. Ajoutez ensuite les bornes et les véhicules depuis la page de l'intégration."
       }
     },
     "abort": {
-      "single_instance_allowed": "Charge Board est déjà configuré."
+      "single_instance_allowed": "EVChargeData est déjà configuré."
     }
   },
   "options": {
@@ -63,7 +63,7 @@
             "energy_entity": "Compteur d'énergie du chargeur (session ou cumulé) ; s'il est renseigné, l'énergie de la session en vient.",
             "plug_entity": "Capteur binaire, ou capteur avec les états ci-dessous.",
             "plugged_states": "Laisser vide pour un capteur binaire (on = branché).",
-            "switch_entity": "Coupé par Charge Board quand un objectif maison est atteint (nécessite l'entité de branchement).",
+            "switch_entity": "Coupé par EVChargeData quand un objectif maison est atteint (nécessite l'entité de branchement).",
             "power_threshold_w": "En charge quand la puissance dépasse cette valeur.",
             "gap_hours": "Sans entité de branchement, la session se termine après cette durée sans charge."
           }
@@ -85,7 +85,7 @@
             "energy_entity": "Compteur d'énergie du chargeur (session ou cumulé) ; s'il est renseigné, l'énergie de la session en vient.",
             "plug_entity": "Capteur binaire, ou capteur avec les états ci-dessous.",
             "plugged_states": "Laisser vide pour un capteur binaire (on = branché).",
-            "switch_entity": "Coupé par Charge Board quand un objectif maison est atteint (nécessite l'entité de branchement).",
+            "switch_entity": "Coupé par EVChargeData quand un objectif maison est atteint (nécessite l'entité de branchement).",
             "power_threshold_w": "En charge quand la puissance dépasse cette valeur.",
             "gap_hours": "Sans entité de branchement, la session se termine après cette durée sans charge."
           }
@@ -116,7 +116,7 @@
           "data_description": {
             "soc_entity": "Capteur en %. Sans lui, les sessions n'ont pas de niveau de départ ni d'arrivée.",
             "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie.",
-            "target_source": "Le véhicule : la voiture s'arrête seule à son objectif. La maison : Charge Board coupe l'interrupteur du chargeur quand l'objectif est atteint.",
+            "target_source": "Le véhicule : la voiture s'arrête seule à son objectif. La maison : EVChargeData coupe l'interrupteur du chargeur quand l'objectif est atteint.",
             "fuel_l100": "Litres aux 100 km d'une voiture essence comparable, pour la comparaison des Statistiques."
           }
         },
@@ -135,7 +135,7 @@
           "data_description": {
             "soc_entity": "Capteur en %. Sans lui, les sessions n'ont pas de niveau de départ ni d'arrivée.",
             "target_fixed": "Utilisé si aucune entité de niveau visé n'est choisie.",
-            "target_source": "Le véhicule : la voiture s'arrête seule à son objectif. La maison : Charge Board coupe l'interrupteur du chargeur quand l'objectif est atteint.",
+            "target_source": "Le véhicule : la voiture s'arrête seule à son objectif. La maison : EVChargeData coupe l'interrupteur du chargeur quand l'objectif est atteint.",
             "fuel_l100": "Litres aux 100 km d'une voiture essence comparable, pour la comparaison des Statistiques."
           }
         }
@@ -162,7 +162,7 @@
     "target_source": {
       "options": {
         "vehicle": "Le véhicule (il s'arrête seul)",
-        "home": "La maison (Charge Board coupe la charge)"
+        "home": "La maison (EVChargeData coupe la charge)"
       }
     }
   },

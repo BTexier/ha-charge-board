@@ -1,4 +1,4 @@
-"""Sidebar panel "Recharge"."""
+"""Sidebar panel "EVChargeData"."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ async def async_register_panel(hass: HomeAssistant) -> None:
         hass,
         frontend_url_path=URL_PATH,
         webcomponent_name="charge-board-panel",
-        sidebar_title="Recharge",
+        sidebar_title="EVChargeData",
         sidebar_icon="mdi:ev-station",
         module_url=f"{JS_URL}?v={version}",
         embed_iframe=False,

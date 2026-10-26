@@ -34,7 +34,7 @@ def command(schema: dict):
         async def handler(hass, connection, msg):
             hub = _hub(hass)
             if hub is None:
-                connection.send_error(msg["id"], "not_loaded", "Charge Board is not loaded")
+                connection.send_error(msg["id"], "not_loaded", "EVChargeData is not loaded")
                 return
             try:
                 connection.send_result(msg["id"], await func(hub, msg))
@@ -211,7 +211,7 @@ def subscribe(hass: HomeAssistant, connection, msg: dict) -> None:
     """Tell the panel to re-fetch: finished sessions changed or a live tick happened."""
     hub = _hub(hass)
     if hub is None:
-        connection.send_error(msg["id"], "not_loaded", "Charge Board is not loaded")
+        connection.send_error(msg["id"], "not_loaded", "EVChargeData is not loaded")
         return
 
     @callback

@@ -89,7 +89,7 @@ class ChargeBoardConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
-        return self.async_create_entry(title="Charge Board", data={})
+        return self.async_create_entry(title="EVChargeData", data={})
 
     @staticmethod
     @callback

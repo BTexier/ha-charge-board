@@ -15,7 +15,7 @@ async def test_entry_sets_up_and_unloads(hass):
 async def test_user_flow_creates_entry(hass):
     result = await hass.config_entries.flow.async_init("charge_board", context={"source": "user"})
     assert result["type"] == "create_entry"
-    assert result["title"] == "Charge Board"
+    assert result["title"] == "EVChargeData"
     assert result["data"] == {}
 
 
@@ -26,7 +26,7 @@ async def test_panel_registered_while_loaded(hass):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         panel = hass.data["frontend_panels"]["charge-board"]
-        assert panel.sidebar_title == "Recharge"
+        assert panel.sidebar_title == "EVChargeData"
         assert panel.sidebar_icon == "mdi:ev-station"
         assert panel.config["_panel_custom"]["module_url"].startswith(
             "/charge_board/charge-board-panel.js?v="
