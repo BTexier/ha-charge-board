@@ -1,0 +1,51 @@
+<h2>Onglet « Véhicules » : la fiche de la Twingo</h2>
+<p class="subtitle">Première proposition, chiffres fictifs. Dis-moi dans le terminal ce qui manque, ce qui est en trop ou mal placé.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Recharge · Aperçu | Sessions | <b>Véhicules</b> | Statistiques</div>
+  <div class="mockup-body" style="font-size:13px;background:#f3f4f6">
+
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <span class="mock-input" style="padding:3px 8px;background:#dbeafe">🚗 Twingo</span>
+      <span class="mock-input" style="padding:3px 8px;color:#888">+ véhicule (dans la configuration de l'intégration)</span>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">
+        <div><b style="font-size:18px">72 %</b><br><span style="color:#888">batterie</span><br><span style="color:#888;font-size:11px">objectif 80 %</span></div>
+        <div><b style="font-size:18px">13,1 kWh</b><br><span style="color:#888">aux 100 km</span><br><span style="color:#888;font-size:11px">30 derniers jours</span></div>
+        <div><b style="font-size:18px">577 km</b><br><span style="color:#888">compteur</span></div>
+        <div><b style="font-size:18px">≈ 150 km</b><br><span style="color:#888">autonomie estimée</span><br><span style="color:#888;font-size:11px">27,5 kWh × 72 % ÷ conso</span></div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="color:#888;margin-bottom:6px">Batterie sur 30 jours · <span style="color:#22c55e">▮</span> recharges</div>
+      <svg viewBox="0 0 300 80" style="width:100%;height:90px">
+        <polyline fill="none" stroke="#3b82f6" stroke-width="2" points="0,30 30,45 45,58 50,20 80,32 100,50 110,62 115,18 150,30 170,44 180,56 185,22 220,35 240,48 250,25 280,38 300,42"/>
+        <rect x="45" y="0" width="5" height="80" fill="#22c55e" opacity=".25"/><rect x="110" y="0" width="5" height="80" fill="#22c55e" opacity=".25"/><rect x="180" y="0" width="5" height="80" fill="#22c55e" opacity=".25"/><rect x="245" y="0" width="5" height="80" fill="#22c55e" opacity=".25"/>
+      </svg>
+      <div style="display:flex;justify-content:space-between;color:#888;font-size:11px"><span>27/09</span><span>aujourd'hui</span></div>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="color:#888;margin-bottom:6px">Consommation par mois (énergie rechargée ÷ km parcourus)</div>
+      <table style="width:100%;border-collapse:collapse">
+        <tr style="color:#888;text-align:left"><th>Mois</th><th>km</th><th>kWh rechargés</th><th>kWh/100 km</th><th>€/100 km</th></tr>
+        <tr style="border-top:1px solid #eee"><td>Oct. 2026</td><td>365</td><td>47,8</td><td>13,1</td><td>1,79</td></tr>
+        <tr style="border-top:1px solid #eee"><td>Sept. 2026</td><td>212 *</td><td>—</td><td>—</td><td>—</td></tr>
+      </table>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;padding:12px">
+      <div style="display:flex;justify-content:space-between"><span style="color:#888">Configuration</span><span style="color:#2563eb">Modifier ↗</span></div>
+      <table style="width:100%;font-size:12px;margin-top:6px">
+        <tr><td style="color:#888">Capacité</td><td>27,5 kWh</td><td style="color:#888">Batterie</td><td>sensor.twingo_batterie <span style="color:#16a34a">● 72 %</span></td></tr>
+        <tr><td style="color:#888">Objectif</td><td>number.twingo_niveau_de_charge_cible</td><td style="color:#888">Kilométrage</td><td>sensor.twingo_kilometrage <span style="color:#16a34a">● 577</span></td></tr>
+        <tr><td style="color:#888">Essence de référence</td><td>6,0 L/100 km</td><td style="color:#888">Prix du litre</td><td>sensor.station_… <span style="color:#dc2626">● indisponible</span></td></tr>
+      </table>
+      <div style="color:#888;font-size:11px;margin-top:6px">« Modifier » ouvre la configuration du véhicule dans les réglages de Home Assistant. Le point de couleur dit si le capteur répond.</div>
+    </div>
+
+  </div>
+</div>
