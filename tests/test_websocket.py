@@ -221,3 +221,33 @@ async def test_stats_for_all_vehicles_has_no_km(env, monkeypatch):
     res = (await ws.receive_json())["result"]
     assert all(r["km"] is None for r in res["rows"])
     assert res["rows"][9]["sessions"] == 1
+
+
+async def test_vehicle_command_shapes_config_and_flags_ignored_cut(env, monkeypatch):
+    hub, _cid, vid, ws = env  # VEHICLE has no target entity: home objective; CHARGER has no switch
+
+    async def km(vehicle_id, start, end):
+        return 100.0
+
+    monkeypatch.setattr(hub, "async_km_between", km)
+    now = dt_util.utcnow().timestamp()
+    await put(hub, sess("a", now - 86400, kwh=13, cost=1.8, vehicle_id=vid))
+    await ws.send_json({"id": 1, "type": "charge_board/vehicle", "vehicle_id": vid})
+    res = (await ws.receive_json())["result"]
+    assert res["name"] == "Twingo"
+    assert res["target_source"] == "home"
+    assert res["target"] == 80
+    assert res["soc"] == 40
+    assert res["consumption_30d"] == pytest.approx(13.0)
+    assert res["autonomy_km"] == pytest.approx(27.5 * 0.40 / 13.0 * 100)
+    assert res["cut_ignored"] is True
+    assert {c["key"] for c in res["config"]} >= {"soc_entity", "target", "odometer_entity"}
+    soc = next(c for c in res["config"] if c["key"] == "soc_entity")
+    assert soc == {"key": "soc_entity", "entity_id": "sensor.soc", "value": 40.0, "ok": True}
+    assert len(res["rows"]) == 12
+
+
+async def test_vehicle_command_unknown_is_not_found(env):
+    _hub, _cid, _vid, ws = env
+    await ws.send_json({"id": 1, "type": "charge_board/vehicle", "vehicle_id": "nope"})
+    assert (await ws.receive_json())["error"]["code"] == "not_found"

@@ -30,6 +30,7 @@ from .const import (
     SUBENTRY_VEHICLE,
     TICK_SECONDS,
 )
+from .model import Session
 from .notifications import plugged_text, started_text, summary_text
 from .panel import URL_PATH
 from .store import SessionStore
@@ -249,6 +250,35 @@ class Hub:
             if month in rows and prev in rows:
                 result[month] = rows[month]
         return result
+
+    async def async_km_between(
+        self, vehicle_id: str | None, start: float, end: float
+    ) -> float | None:
+        """Distance driven between two times, from the odometer's hourly statistics.
+
+        None when the statistics start after `start` (the period is not fully covered).
+        """
+        entity = (self.vehicles.get(vehicle_id) or {}).get("odometer_entity")
+        if not entity or "recorder" not in self.hass.config.components:
+            return None
+        stats = await get_instance(self.hass).async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            dt_util.utc_from_timestamp(start),
+            dt_util.utc_from_timestamp(end),
+            {entity},
+            "hour",
+            None,
+            {"change"},
+        )
+        rows = stats.get(entity, [])
+        if not rows or rows[0]["start"] > start + 3600:
+            return None
+        return sum(r.get("change") or 0.0 for r in rows)
+
+    def last_session_of(self, vehicle_id: str | None) -> Session | None:
+        """The vehicle's most recent finished session (sessions are kept newest first)."""
+        return next((s for s in self.store.sessions if s.vehicle_id == vehicle_id), None)
 
     def target_source(self, vehicle_id: str | None) -> str:
         """ "vehicle" (the car stops by itself) or "home" (Charge Board cuts the charge).

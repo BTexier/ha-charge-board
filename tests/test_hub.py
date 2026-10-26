@@ -337,3 +337,49 @@ async def test_fuel_price_prefers_the_entity(hass, setup):
     hub.options["fuel_price_entity"] = "sensor.station"
     hass.states.async_set("sensor.station", "1.789")
     assert hub.fuel_price() == 1.789
+
+
+async def test_consumption_sensor_after_a_session(hass, freezer):
+    hass.states.async_set("sensor.p", "0", {"unit_of_measurement": "W"})
+    hass.states.async_set("binary_sensor.plug", "off")
+    hass.states.async_set("sensor.soc", "80")
+    hass.states.async_set("sensor.km", "100")
+    entry = MockConfigEntry(
+        domain="charge_board",
+        subentries_data=[
+            {"data": CHARGER, "subentry_type": "charger", "title": "Dé", "unique_id": None},
+            {
+                "data": {**VEHICLE, "odometer_entity": "sensor.km"},
+                "subentry_type": "vehicle",
+                "title": "Twingo",
+                "unique_id": None,
+            },
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    hub = entry.runtime_data
+    vid = next(iter(hub.vehicles))
+    from custom_components.charge_board.model import Session
+
+    await hub.store.async_add(
+        Session(
+            id="s",
+            charger_id="c",
+            vehicle_id=vid,
+            charge_start=1.0,
+            energy_kwh=5,
+            soc_end=80,
+            odometer_end=100,
+        )
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.twingo_consommation_recharge")
+    assert state.state == "unavailable"
+    hass.states.async_set("sensor.soc", "60")
+    hass.states.async_set("sensor.km", "140")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.twingo_consommation_recharge")
+    assert float(state.state) == pytest.approx(13.75)
+    assert state.attributes["unit_of_measurement"] == "kWh/100km"

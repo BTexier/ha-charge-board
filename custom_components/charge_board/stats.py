@@ -106,3 +106,23 @@ def total_row(rows: list[dict]) -> dict:
         values = [r[key] for r in rows]
         total[key] = sum(values) if values and None not in values else None
     return total
+
+
+MIN_KM_FOR_CONSUMPTION = 5
+
+
+def consumption_since(
+    soc_then: float | None,
+    soc_now: float | None,
+    km_then: float | None,
+    km_now: float | None,
+    capacity_kwh: float | None,
+) -> float | None:
+    """Battery-side kWh/100 km since a reference (the last unplug); None without a basis."""
+    if None in (soc_then, soc_now, km_then, km_now, capacity_kwh):
+        return None
+    km = km_now - km_then
+    used = (soc_then - soc_now) / 100 * capacity_kwh
+    if km < MIN_KM_FOR_CONSUMPTION or used < 0:
+        return None
+    return used / km * 100

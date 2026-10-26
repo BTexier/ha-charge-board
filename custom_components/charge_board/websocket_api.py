@@ -15,7 +15,7 @@ from .const import DOMAIN, SIGNAL_LIVE, SIGNAL_UPDATED
 from .estimate import estimate_end
 from .hub import Hub
 from .model import Session
-from .stats import month_rows, total_row
+from .stats import consumption_since, month_rows, total_row
 
 
 def _hub(hass: HomeAssistant) -> Hub | None:
@@ -59,7 +59,7 @@ def async_register(hass: HomeAssistant) -> None:
     if hass.data.setdefault(DOMAIN, {}).get("ws"):
         return
     hass.data[DOMAIN]["ws"] = True
-    for handler in (overview, sessions, session, set_vehicle, delete, merge, split, stats):
+    for handler in (overview, sessions, session, set_vehicle, delete, merge, split, stats, vehicle):
         websocket_api.async_register_command(hass, handler)
     websocket_api.async_register_command(hass, subscribe)
 
@@ -241,3 +241,87 @@ async def stats(hub: Hub, msg: dict) -> dict:
     km = await hub.async_km_by_month(vid, months) if vid else {}
     rows = month_rows(found, months, km, dt_util.get_default_time_zone())
     return {"currency": hub.hass.config.currency, "rows": rows, "total": total_row(rows)}
+
+
+def _last_months(now: float, n: int = 12) -> list[str]:
+    """The n months up to the current one, oldest first ("YYYY-MM", local time)."""
+    year, month = (int(x) for x in _local_month(now).split("-"))
+    out = []
+    for _ in range(n):
+        out.append(f"{year}-{month:02d}")
+        year, month = (year, month - 1) if month > 1 else (year - 1, 12)
+    return out[::-1]
+
+
+@command({vol.Required("vehicle_id"): str})
+async def vehicle(hub: Hub, msg: dict) -> dict:
+    """Data of the Vehicles tab: levels, consumption, monthly rows and sensor health."""
+    vid = msg["vehicle_id"]
+    v = hub.vehicles.get(vid)
+    if v is None:
+        raise _Error("not_found", "unknown vehicle")
+    now = dt_util.utcnow().timestamp()
+    soc = hub._number(v.get("soc_entity"))
+    odometer = hub._number(v.get("odometer_entity"))
+    capacity = v.get("capacity_kwh")
+    mine = [s for s in hub.store.sessions if s.vehicle_id == vid]
+
+    start = now - 30 * 86400
+    km_30d = await hub.async_km_between(vid, start, now)
+    energy_30d = sum(s.energy_kwh for s in mine if _start(s) >= start)
+    consumption = energy_30d / km_30d * 100 if km_30d else None
+    autonomy = (
+        capacity * soc / 100 / consumption * 100
+        if consumption and soc is not None and capacity
+        else None
+    )
+    months = _last_months(now)
+    rows = month_rows(mine, months, await hub.async_km_by_month(vid, months), _tz())
+    for row in rows:
+        row["kwh_100km"] = row["energy_kwh"] / row["km"] * 100 if row["km"] else None
+
+    last = hub.last_session_of(vid)
+    source = hub.target_source(vid)
+    fuel_entity = hub.options.get("fuel_price_entity")
+
+    def item(key: str, entity_id: str | None, value) -> dict:
+        return {"key": key, "entity_id": entity_id, "value": value, "ok": value is not None}
+
+    return {
+        "id": vid,
+        "name": v["name"],
+        "capacity_kwh": capacity,
+        "soc": soc,
+        "target": hub.target_for(vid),
+        "target_source": source,
+        "odometer": odometer,
+        "consumption_30d": consumption,
+        "autonomy_km": autonomy,
+        "consumption_since": consumption_since(
+            last.soc_end if last else None,
+            soc,
+            last.odometer_end if last else None,
+            odometer,
+            capacity,
+        ),
+        "fuel_l100": v.get("fuel_l100"),
+        "currency": hub.hass.config.currency,
+        "rows": rows,
+        "sessions": [
+            {"start": _start(s), "end": s.unplugged_at or s.charge_end}
+            for s in mine
+            if _start(s) >= start
+        ],
+        "config": [
+            item("soc_entity", v.get("soc_entity"), soc),
+            item("target", v.get("target_entity"), hub.target_for(vid)),
+            item("odometer_entity", v.get("odometer_entity"), odometer),
+            item("fuel_price", fuel_entity, hub.fuel_price()),
+        ],
+        "cut_ignored": source == "home"
+        and not any(c.get("plug_entity") and c.get("switch_entity") for c in hub.chargers.values()),
+    }
+
+
+def _tz():
+    return dt_util.get_default_time_zone()

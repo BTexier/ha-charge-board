@@ -178,6 +178,9 @@
       },
       "session_cost": {
         "name": "Session cost"
+      },
+      "consumption_since_charge": {
+        "name": "Consumption since charge"
       }
     }
   }

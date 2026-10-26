@@ -104,3 +104,17 @@ def test_total_savings_only_when_every_month_has_them():
     assert rows[1]["savings"] is not None
     assert total_row(rows)["savings"] is None
     assert total_row(rows)["cost_per_100km"] == pytest.approx(2.8 / 300 * 100)
+
+
+def test_consumption_since_formula():
+    from custom_components.charge_board.stats import consumption_since
+
+    assert consumption_since(80, 60, 100, 140, 27.5) == pytest.approx(13.75)
+
+
+def test_consumption_since_needs_5_km_and_known_values():
+    from custom_components.charge_board.stats import consumption_since
+
+    assert consumption_since(80, 60, 100, 103, 27.5) is None
+    assert consumption_since(None, 60, 100, 140, 27.5) is None
+    assert consumption_since(60, 80, 100, 140, 27.5) is None  # charged meanwhile
