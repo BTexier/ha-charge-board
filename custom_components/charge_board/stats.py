@@ -85,6 +85,8 @@ def total_row(rows: list[dict], until: str | None = None) -> dict:
     energy = sum(r["energy_kwh"] for r in rows)
     shared = [r for r in rows if r["off_peak_share"] is not None]
     shared_kwh = sum(r["energy_kwh"] for r in shared)
+    # Months with neither a charge nor odometer data (before the car) do not count.
+    tracked = [r for r in rows if r["sessions"] or r["km"] is not None]
     fuel_rows = [r for r in rows if r["fuel_price"] is not None]
     fuel_kwh = sum(r["energy_kwh"] for r in fuel_rows)
 
@@ -107,7 +109,9 @@ def total_row(rows: list[dict], until: str | None = None) -> dict:
         "off_peak_cost": sum(r["off_peak_cost"] for r in rows),
         "peak_cost": sum(r["peak_cost"] for r in rows),
         "km": (
-            sum(r["km"] for r in rows) if rows and all(r["km"] is not None for r in rows) else None
+            sum(r["km"] for r in tracked)
+            if tracked and all(r["km"] is not None for r in tracked)
+            else None
         ),
         "fuel_price": mean("fuel_price") if fuel_kwh > 0 else None,
         "fuel_l100": mean("fuel_l100") if fuel_kwh > 0 else None,

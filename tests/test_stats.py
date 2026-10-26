@@ -130,3 +130,13 @@ def test_total_of_the_current_year_ignores_future_months_and_months_without_char
     total = total_row(rows, until="2026-10")
     assert total["km"] == pytest.approx(250.0)
     assert total["savings"] == pytest.approx(rows[1]["savings"])
+
+
+def test_total_km_ignores_months_before_any_charge_or_odometer():
+    rows = month_rows(
+        [s(OCT_10, fuel_price=1.8, fuel_l100=6)],
+        ["2026-08", "2026-09", "2026-10"],
+        {"2026-10": 200.0},
+        PARIS,
+    )
+    assert total_row(rows, until="2026-10")["km"] == pytest.approx(200.0)

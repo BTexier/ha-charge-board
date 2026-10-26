@@ -129,3 +129,61 @@ async def test_rebuild_history_records_a_past_charge(hass, freezer):
         return_response=True,
     )
     assert again == {"added": 0, "replaced": 0, "completed": 0}
+
+
+async def test_stats_pairs_the_partial_month_with_real_statistics(hass, hass_ws_client):
+    from custom_components.charge_board.model import Session
+
+    await hass.config.async_set_time_zone("Europe/Paris")
+    hass.states.async_set("sensor.p", "0", {"unit_of_measurement": "W"})
+    entry = MockConfigEntry(
+        domain="charge_board",
+        subentries_data=[
+            {"data": CHARGER, "subentry_type": "charger", "title": "Dé", "unique_id": None},
+            {
+                "data": {**VEHICLE, "odometer_entity": "sensor.km"},
+                "subentry_type": "vehicle",
+                "title": "Twingo",
+                "unique_id": None,
+            },
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    start = datetime(2026, 10, 13, tzinfo=UTC)
+    rows = [{"start": start + timedelta(hours=h), "state": h, "sum": h} for h in range(24 * 10)]
+    async_import_statistics(
+        hass,
+        {
+            "mean_type": StatisticMeanType.NONE,
+            "unit_class": "distance",
+            "has_sum": True,
+            "name": None,
+            "source": "recorder",
+            "statistic_id": "sensor.km",
+            "unit_of_measurement": "km",
+        },
+        rows,
+    )
+    await async_wait_recording_done(hass)
+    hub = entry.runtime_data
+    vid = next(iter(hub.vehicles))
+    first = datetime(2026, 10, 16, 16, 34, tzinfo=UTC).timestamp()
+    second = datetime(2026, 10, 20, 20, tzinfo=UTC).timestamp()
+    await hub.store.async_replace(
+        [],
+        [
+            Session(
+                id="a", charger_id="c", vehicle_id=vid, charge_start=first, energy_kwh=0.7, cost=0.1
+            ),
+            Session(
+                id="b", charger_id="c", vehicle_id=vid, charge_start=second, energy_kwh=10, cost=1.4
+            ),
+        ],
+    )
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": "charge_board/stats", "year": 2026, "vehicle_id": vid})
+    october = (await ws.receive_json())["result"]["rows"][9]
+    assert october["km_partial"] is True
+    assert october["km"] == pytest.approx(239 - (3 * 24 + 16), abs=1)  # from the first charge
