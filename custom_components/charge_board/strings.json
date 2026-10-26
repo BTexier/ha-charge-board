@@ -183,5 +183,17 @@
         "name": "Consumption since charge"
       }
     }
+  },
+  "services": {
+    "rebuild_history": {
+      "name": "Rebuild from history",
+      "description": "Replays Home Assistant's history (everything the recorder still keeps, usually 10 days) and adds the charging sessions that were not recorded, or replaces a session recorded only in part. Sessions corrected by hand are kept.",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": "Replay from this time (default: the oldest history kept)."
+        }
+      }
+    }
   }
 }

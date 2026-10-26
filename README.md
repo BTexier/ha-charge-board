@@ -98,11 +98,15 @@ The **target source** of a vehicle is either:
 
 The cut needs both a **plug entity** and a **charging switch** on the charger; without them the Vehicles card says the home target has no effect.
 
+### Rebuild from history
+
+The action **EVChargeData: Rebuild from history** (`charge_board.rebuild_history`, optional `start`) replays Home Assistant's history (everything the recorder still keeps, 10 days by default) through the same engine as live recording. It adds the sessions that were not recorded (before the installation, or while Home Assistant was down) and replaces a session recorded only in part when the rebuilt one holds clearly more energy. Sessions corrected by hand are never touched, and running it again changes nothing. It returns how many sessions were added and replaced. Rebuilt sessions are attributed to the vehicle currently selected on the charger.
+
 ### Limits
 
 - Finished sessions are stored in a single JSON file.
 - A Home Assistant restart during a session marks it as estimated.
-- No import of past sessions: the panel starts empty at installation.
+- Past sessions only go back as far as the history the recorder keeps (10 days by default), through the rebuild action.
 - Not in v1: events/notifications, stop at target level, statistics tabs, automatic vehicle detection.
 
 ### Example: the author's setup
@@ -217,11 +221,15 @@ La **source de l'objectif** d'un véhicule est :
 
 La coupure demande une **entité de branchement** et un **interrupteur de charge** sur le chargeur ; sans eux, la fiche Véhicules signale que l'objectif maison est sans effet.
 
+### Reconstruire depuis l'historique
+
+L'action **EVChargeData : Reconstruire depuis l'historique** (`charge_board.rebuild_history`, `start` facultatif) rejoue l'historique de Home Assistant (tout ce que le recorder garde encore, 10 jours par défaut) dans le même moteur que l'enregistrement en direct. Elle ajoute les sessions qui n'ont pas été enregistrées (avant l'installation, ou pendant un arrêt de Home Assistant) et remplace une session enregistrée en partie quand la session reconstruite contient nettement plus d'énergie. Les sessions corrigées à la main ne sont jamais touchées, et la relancer ne change rien. Elle renvoie le nombre de sessions ajoutées et remplacées. Les sessions reconstruites sont attribuées au véhicule actuellement sélectionné sur le chargeur.
+
 ### Limites
 
 - Les sessions terminées sont stockées dans un seul fichier JSON.
 - Un redémarrage de Home Assistant pendant une session la marque comme estimée.
-- Pas d'import des sessions passées : le panneau démarre vide à l'installation.
+- Les sessions passées ne remontent pas au-delà de l'historique conservé par le recorder (10 jours par défaut), via l'action de reconstruction.
 - Hors v1 : événements/notifications, arrêt au niveau visé, onglets statistiques, détection automatique du véhicule.
 
 ### Exemple : l'installation de l'auteur

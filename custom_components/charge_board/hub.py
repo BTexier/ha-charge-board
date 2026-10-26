@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import logging
+from bisect import bisect_right
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 from uuid import uuid4
 
-from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -33,11 +34,15 @@ from .const import (
 from .model import Session
 from .notifications import plugged_text, started_text, summary_text
 from .panel import URL_PATH
+from .rebuild import merge_rebuilt
 from .store import SessionStore
 from .target import should_cut
 from .tracker import Sample, SessionTracker, TrackerEvent, TrackerSettings
 
 LOGGER = logging.getLogger(__name__)
+
+# Reads an entity's state: the live one (hass.states.get) or one from the history.
+StateGetter = Callable[[str], State | None]
 
 POWER_UNITS = {"W": 1.0, "kW": 1000.0}
 ENERGY_UNITS = {"Wh": 0.001, "kWh": 1.0}
@@ -118,18 +123,10 @@ class Hub:
     def async_start_feeding(self) -> None:
         """Subscribe and feed; called once the entities are set up, so the first feed already
         uses the restored vehicle selection (not the default one)."""
-        keys = ("power_entity", "energy_entity", "plug_entity", "soc_entity")
-        entities = {
-            d[k]
-            for d in (*self.chargers.values(), *self.vehicles.values())
-            for k in keys
-            if d.get(k)
-        }
-        entities |= {
-            self.options[k] for k in ("price_entity", "off_peak_entity") if self.options.get(k)
-        }
         self._unsubs = [
-            async_track_state_change_event(self.hass, list(entities), self._on_change),
+            async_track_state_change_event(
+                self.hass, sorted(self._watched_entities()), self._on_change
+            ),
             async_track_time_interval(self.hass, self._on_tick, timedelta(seconds=TICK_SECONDS)),
         ]
         self._feed_all()
@@ -275,6 +272,71 @@ class Hub:
         except Exception as err:  # noqa: BLE001 - a notification must never break recording
             LOGGER.warning("EVChargeData could not notify %s: %s", service, err)
 
+    async def async_rebuild_history(self, start: datetime | None = None) -> dict[str, int]:
+        """Replay the recorder's history through fresh trackers and keep the sessions found.
+
+        Defaults to everything the recorder still has (its purge_keep_days). See
+        rebuild.merge_rebuilt for what is added or replaced.
+        """
+        now = dt_util.utcnow()
+        recorder = get_instance(self.hass)
+        start = start or now - timedelta(days=recorder.keep_days)
+        entities = sorted(self._watched_entities())
+        found = await recorder.async_add_executor_job(
+            lambda: history.get_significant_states(
+                self.hass,
+                # The recorder leaves out a state written exactly at the start time.
+                start - timedelta(seconds=1),
+                now,
+                entities,
+                include_start_time_state=True,
+                significant_changes_only=False,
+            )
+        )
+        states = {e: sorted(found.get(e, []), key=lambda st: st.last_updated) for e in entities}
+        times = {e: [st.last_updated.timestamp() for st in sts] for e, sts in states.items()}
+
+        def at(t: float) -> StateGetter:
+            def get(entity_id: str) -> State | None:
+                i = bisect_right(times.get(entity_id, []), t)
+                return states[entity_id][i - 1] if i else None
+
+            return get
+
+        removed: list[str] = []
+        added: list[Session] = []
+        for cid, live in self.trackers.items():
+            tracker = SessionTracker(cid, live.settings, _new_id)
+            vehicle_id = self.vehicle_for(cid)
+            rebuilt = []
+            t = start.timestamp()
+            while t <= now.timestamp():
+                when = dt_util.utc_from_timestamp(t)
+                finished = tracker.feed(self.sample_for(cid, when, at(t)), vehicle_id)
+                if finished is not None:
+                    rebuilt.append(finished)
+                t += TICK_SECONDS
+            busy = live.current.charge_start if live.current else None
+            recorded = [s for s in self.store.sessions if s.charger_id == cid]
+            gone, new = merge_rebuilt(recorded, rebuilt, busy)
+            removed += gone
+            added += new
+        if removed or added:
+            await self.store.async_replace(removed, added)
+        return {"added": len(added), "replaced": len(removed)}
+
+    def _watched_entities(self) -> set[str]:
+        keys = ("power_entity", "energy_entity", "plug_entity", "soc_entity", "odometer_entity")
+        entities = {
+            d[k]
+            for d in (*self.chargers.values(), *self.vehicles.values())
+            for k in keys
+            if d.get(k)
+        }
+        return entities | {
+            self.options[k] for k in ("price_entity", "off_peak_entity") if self.options.get(k)
+        }
+
     async def async_km_by_month(
         self, vehicle_id: str | None, months: list[str]
     ) -> dict[str, float | None]:
@@ -373,20 +435,23 @@ class Hub:
         self.selected[charger_id] = vehicle_id
         async_dispatcher_send(self.hass, SIGNAL_LIVE.format(charger_id))
 
-    def sample_for(self, charger_id: str) -> Sample:
+    def sample_for(
+        self, charger_id: str, now: datetime | None = None, get: StateGetter | None = None
+    ) -> Sample:
+        """The charger's reading now, or at `now` with `get` reading the states of that time."""
         c = self.chargers[charger_id]
-        now = dt_util.utcnow()
-        off_peak = self._off_peak(now)
+        now = now or dt_util.utcnow()
+        off_peak = self._off_peak(now, get)
         vehicle = self.vehicles.get(self.vehicle_for(charger_id)) or {}
         return Sample(
             t=now.timestamp(),
-            power_w=self._number(c.get("power_entity"), POWER_UNITS),
-            energy_kwh=self._number(c.get("energy_entity"), ENERGY_UNITS),
-            plugged=self._plugged(c),
-            price=self._price(off_peak),
+            power_w=self._number(c.get("power_entity"), POWER_UNITS, get),
+            energy_kwh=self._number(c.get("energy_entity"), ENERGY_UNITS, get),
+            plugged=self._plugged(c, get),
+            price=self._price(off_peak, get),
             off_peak=off_peak,
-            soc=self._number(vehicle.get("soc_entity")),
-            odometer=self._number(vehicle.get("odometer_entity")),
+            soc=self._number(vehicle.get("soc_entity"), get=get),
+            odometer=self._number(vehicle.get("odometer_entity"), get=get),
         )
 
     def live(self, charger_id: str) -> dict:
@@ -408,12 +473,17 @@ class Hub:
             "session": sess.to_dict() if sess else None,
         }
 
-    def _state(self, entity_id: str | None):
-        st = self.hass.states.get(entity_id) if entity_id else None
+    def _state(self, entity_id: str | None, get: StateGetter | None = None):
+        st = (get or self.hass.states.get)(entity_id) if entity_id else None
         return None if st is None or st.state in (STATE_UNAVAILABLE, STATE_UNKNOWN) else st
 
-    def _number(self, entity_id: str | None, units: dict[str, float] | None = None) -> float | None:
-        st = self._state(entity_id)
+    def _number(
+        self,
+        entity_id: str | None,
+        units: dict[str, float] | None = None,
+        get: StateGetter | None = None,
+    ) -> float | None:
+        st = self._state(entity_id, get)
         if st is None:
             return None
         try:
@@ -423,25 +493,25 @@ class Hub:
         # Unknown or missing unit: assume the base unit (W, kWh).
         return value * (units or {}).get(st.attributes.get(ATTR_UNIT_OF_MEASUREMENT), 1.0)
 
-    def _plugged(self, charger: dict) -> bool | None:
-        st = self._state(charger.get("plug_entity"))
+    def _plugged(self, charger: dict, get: StateGetter | None = None) -> bool | None:
+        st = self._state(charger.get("plug_entity"), get)
         if st is None:
             return None
         states = charger.get("plugged_states") or []
         return st.state in states if states else st.state == "on"
 
-    def _off_peak(self, now: datetime) -> bool | None:
+    def _off_peak(self, now: datetime, get: StateGetter | None = None) -> bool | None:
         if self.options.get("off_peak_entity"):
-            st = self._state(self.options["off_peak_entity"])
+            st = self._state(self.options["off_peak_entity"], get)
             return None if st is None else st.state == "on"
         if self._windows:
             return in_windows(dt_util.as_local(now).time(), self._windows)
         return None
 
-    def _price(self, off_peak: bool | None) -> float | None:
+    def _price(self, off_peak: bool | None, get: StateGetter | None = None) -> float | None:
         o = self.options
         if o.get("price_entity"):
-            return self._number(o["price_entity"])
+            return self._number(o["price_entity"], get=get)
         off, peak = o.get("off_peak_price"), o.get("peak_price")
         if off_peak is None or off is None or peak is None:
             # Without an off-peak source (or with one price only) a single price still applies.

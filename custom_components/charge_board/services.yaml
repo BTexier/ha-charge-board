@@ -1,0 +1,5 @@
+rebuild_history:
+  fields:
+    start:
+      selector:
+        datetime:

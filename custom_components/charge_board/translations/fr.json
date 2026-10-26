@@ -183,5 +183,17 @@
         "name": "Consommation depuis la recharge"
       }
     }
+  },
+  "services": {
+    "rebuild_history": {
+      "name": "Reconstruire depuis l'historique",
+      "description": "Rejoue l'historique de Home Assistant (tout ce que le recorder garde encore, en général 10 jours) et ajoute les sessions de recharge non enregistrées, ou remplace une session enregistrée en partie. Les sessions corrigées à la main sont conservées.",
+      "fields": {
+        "start": {
+          "name": "Début",
+          "description": "Rejouer à partir de ce moment (par défaut : l'historique le plus ancien conservé)."
+        }
+      }
+    }
   }
 }

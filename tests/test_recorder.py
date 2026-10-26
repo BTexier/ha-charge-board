@@ -60,3 +60,65 @@ async def test_km_by_month_marks_the_first_month_incomplete(hass):
     km = await entry.runtime_data.async_km_by_month(vid, ["2026-10", "2026-11"])
     assert km["2026-10"] is None
     assert km["2026-11"] == pytest.approx(24 * 21)  # last imported hour: 21 Nov 23:00
+
+
+async def test_rebuild_history_records_a_past_charge(hass, freezer):
+    t0 = datetime(2026, 10, 20, 18, tzinfo=UTC)
+    freezer.move_to(t0)
+    timeline = [
+        (0, {"binary_sensor.plug": "off", "sensor.p": "0"}),
+        (60, {"binary_sensor.plug": "on"}),
+        (120, {"sensor.p": "2200"}),
+        (120 + 3600, {"sensor.p": "0"}),
+        (180 + 3600, {"binary_sensor.plug": "off"}),
+    ]
+    for offset, states in timeline:
+        freezer.move_to(t0 + timedelta(seconds=offset))
+        for entity_id, state in states.items():
+            attrs = {"unit_of_measurement": "W"} if entity_id == "sensor.p" else {}
+            hass.states.async_set(entity_id, state, attrs)
+        await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+    freezer.move_to(t0 + timedelta(hours=3))
+
+    entry = MockConfigEntry(
+        domain="charge_board",
+        options={"off_peak_price": 0.2, "peak_price": 0.2},
+        subentries_data=[
+            {
+                "data": {**CHARGER, "plug_entity": "binary_sensor.plug", "plugged_states": []},
+                "subentry_type": "charger",
+                "title": "Dé",
+                "unique_id": None,
+            },
+            {"data": VEHICLE, "subentry_type": "vehicle", "title": "Twingo", "unique_id": None},
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.store.sessions == []
+
+    result = await hass.services.async_call(
+        "charge_board",
+        "rebuild_history",
+        {"start": t0.isoformat()},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"added": 1, "replaced": 0}
+    (s,) = entry.runtime_data.store.sessions
+    assert s.energy_kwh == pytest.approx(2.2, abs=0.05)
+    assert s.cost == pytest.approx(0.44, abs=0.01)
+    assert s.plugged_at == pytest.approx((t0 + timedelta(seconds=60)).timestamp(), abs=30)
+    assert s.vehicle_id == next(iter(entry.runtime_data.vehicles))
+
+    # Running it again changes nothing.
+    again = await hass.services.async_call(
+        "charge_board",
+        "rebuild_history",
+        {"start": t0.isoformat()},
+        blocking=True,
+        return_response=True,
+    )
+    assert again == {"added": 0, "replaced": 0}
