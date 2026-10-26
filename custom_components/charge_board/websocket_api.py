@@ -15,6 +15,7 @@ from .const import DOMAIN, SIGNAL_LIVE, SIGNAL_UPDATED
 from .estimate import estimate_end
 from .hub import Hub
 from .model import Session
+from .stats import month_rows, total_row
 
 
 def _hub(hass: HomeAssistant) -> Hub | None:
@@ -58,7 +59,7 @@ def async_register(hass: HomeAssistant) -> None:
     if hass.data.setdefault(DOMAIN, {}).get("ws"):
         return
     hass.data[DOMAIN]["ws"] = True
-    for handler in (overview, sessions, session, set_vehicle, delete, merge, split):
+    for handler in (overview, sessions, session, set_vehicle, delete, merge, split, stats):
         websocket_api.async_register_command(hass, handler)
     websocket_api.async_register_command(hass, subscribe)
 
@@ -229,3 +230,14 @@ def subscribe(hass: HomeAssistant, connection, msg: dict) -> None:
 
     connection.subscriptions[msg["id"]] = unsub
     connection.send_result(msg["id"])
+
+
+@command({vol.Optional("vehicle_id"): str, vol.Required("year"): int})
+async def stats(hub: Hub, msg: dict) -> dict:
+    """The 12 months of a year and their total; km only for one vehicle (odometers do not add)."""
+    vid = msg.get("vehicle_id")
+    months = [f"{msg['year']}-{m:02d}" for m in range(1, 13)]
+    found = [s for s in hub.store.sessions if vid is None or s.vehicle_id == vid]
+    km = await hub.async_km_by_month(vid, months) if vid else {}
+    rows = month_rows(found, months, km, dt_util.get_default_time_zone())
+    return {"currency": hub.hass.config.currency, "rows": rows, "total": total_row(rows)}

@@ -7,6 +7,8 @@ from collections.abc import Callable
 from datetime import datetime, time, timedelta
 from uuid import uuid4
 
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, HomeAssistant, callback
@@ -208,6 +210,45 @@ class Hub:
             )
         except Exception as err:  # noqa: BLE001 - a notification must never break recording
             LOGGER.warning("Charge Board could not notify %s: %s", service, err)
+
+    async def async_km_by_month(
+        self, vehicle_id: str | None, months: list[str]
+    ) -> dict[str, float | None]:
+        """Distance driven per local month, from the odometer's long-term statistics.
+
+        A month is known only if the statistics already existed before it started (a row for
+        the previous month); the first month of the statistics is partial, so it is None.
+        ponytail: a sensor whose statistics start exactly at a month's first hour still gets
+        that month as None.
+        """
+        result: dict[str, float | None] = dict.fromkeys(months)
+        entity = (self.vehicles.get(vehicle_id) or {}).get("odometer_entity")
+        if not entity or not months or "recorder" not in self.hass.config.components:
+            return result
+        tz = dt_util.get_default_time_zone()
+        first = datetime.strptime(months[0], "%Y-%m").replace(tzinfo=tz)
+        start = (first - timedelta(days=1)).replace(day=1)  # previous month
+        last = datetime.strptime(months[-1], "%Y-%m").replace(tzinfo=tz)
+        end = (last + timedelta(days=32)).replace(day=1)
+        stats = await get_instance(self.hass).async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            start,
+            end,
+            {entity},
+            "month",
+            None,
+            {"change"},
+        )
+        rows = {
+            datetime.fromtimestamp(r["start"], tz).strftime("%Y-%m"): r.get("change")
+            for r in stats.get(entity, [])
+        }
+        for month in months:
+            prev = (datetime.strptime(month, "%Y-%m") - timedelta(days=1)).strftime("%Y-%m")
+            if month in rows and prev in rows:
+                result[month] = rows[month]
+        return result
 
     def target_source(self, vehicle_id: str | None) -> str:
         """ "vehicle" (the car stops by itself) or "home" (Charge Board cuts the charge).

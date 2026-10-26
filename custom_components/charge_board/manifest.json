@@ -1,6 +1,9 @@
 {
   "domain": "charge_board",
   "name": "Charge Board",
+  "after_dependencies": [
+    "recorder"
+  ],
   "codeowners": [
     "@BTexier"
   ],

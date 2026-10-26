@@ -193,3 +193,31 @@ async def test_summary_unpriced_count(env):
     await ws.send_json_auto_id({"type": "charge_board/sessions"})
     summary = (await ws.receive_json())["result"]["summary"]
     assert (summary["cost"], summary["unpriced_count"]) == (2.0, 1)
+
+
+async def test_stats_command_returns_twelve_months(env, monkeypatch):
+    hub, _cid, vid, ws = env
+
+    async def km(vehicle_id, months):
+        return {"2026-10": 300.0}
+
+    monkeypatch.setattr(hub, "async_km_by_month", km)
+    await put(hub, sess("a", ts(2026, 10, 10, 22), kwh=10, cost=1.4, vehicle_id=vid))
+    await ws.send_json({"id": 1, "type": "charge_board/stats", "year": 2026, "vehicle_id": vid})
+    res = (await ws.receive_json())["result"]
+    assert len(res["rows"]) == 12
+    october = res["rows"][9]
+    assert october["month"] == "2026-10"
+    assert october["km"] == 300.0
+    assert october["cost_per_100km"] == pytest.approx(1.4 / 300 * 100)
+    assert res["total"]["sessions"] == 1
+    assert res["currency"] == "EUR"
+
+
+async def test_stats_for_all_vehicles_has_no_km(env, monkeypatch):
+    hub, _cid, vid, ws = env
+    await put(hub, sess("a", ts(2026, 10, 10, 22), vehicle_id=vid))
+    await ws.send_json({"id": 1, "type": "charge_board/stats", "year": 2026})
+    res = (await ws.receive_json())["result"]
+    assert all(r["km"] is None for r in res["rows"])
+    assert res["rows"][9]["sessions"] == 1
