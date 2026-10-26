@@ -46,7 +46,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
     async def rebuild(call: ServiceCall) -> dict:
         entries = hass.config_entries.async_loaded_entries(DOMAIN)
         if not entries:
-            return {"added": 0, "replaced": 0}
+            return {"added": 0, "replaced": 0, "completed": 0}
         return await entries[0].runtime_data.async_rebuild_history(call.data.get("start"))
 
     hass.services.async_register(

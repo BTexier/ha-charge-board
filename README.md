@@ -79,7 +79,7 @@ The **Statistics** tab answers what charging costs, month by month, for one vehi
 - the cost of each month, off-peak and peak stacked;
 - a table of the year's months and its total.
 
-Distances come from Home Assistant's long-term statistics of the vehicle's **odometer** (vehicle setting; the sensor needs a `state_class`). A month the statistics do not fully cover shows "—" for the per-100-km figures.
+Distances come from Home Assistant's long-term statistics of the vehicle's **odometer** (vehicle setting; the sensor needs a `state_class`). The first month of these statistics only has the km driven since they began (marked *).
 
 The petrol comparison uses the vehicle's **reference petrol consumption** (L/100 km) and the **petrol price** of the EVChargeData options: a sensor (for example a station of the Prix Carburant integration) or a fixed price. Both are recorded in each session, so changing them later does not rewrite past months.
 
@@ -100,7 +100,7 @@ The cut needs both a **plug entity** and a **charging switch** on the charger; w
 
 ### Rebuild from history
 
-The action **EVChargeData: Rebuild from history** (`charge_board.rebuild_history`, optional `start`) replays Home Assistant's history (everything the recorder still keeps, 10 days by default) through the same engine as live recording. It adds the sessions that were not recorded (before the installation, or while Home Assistant was down) and replaces a session recorded only in part when the rebuilt one holds clearly more energy. Sessions corrected by hand are never touched, and running it again changes nothing. It returns how many sessions were added and replaced. Rebuilt sessions are attributed to the vehicle currently selected on the charger.
+The action **EVChargeData: Rebuild from history** (`charge_board.rebuild_history`, optional `start`) replays Home Assistant's history (everything the recorder still keeps, 10 days by default) through the same engine as live recording. It adds the sessions that were not recorded (before the installation, or while Home Assistant was down) and replaces a session recorded only in part when the rebuilt one holds clearly more energy. Sessions corrected by hand are never touched, and running it again changes nothing. It also completes recorded sessions: the odometer read in the history, and today's petrol price and reference consumption where they were missing (no petrol price history exists). It returns how many sessions were added, replaced and completed. Rebuilt sessions are attributed to the vehicle currently selected on the charger.
 
 ### Limits
 
@@ -202,7 +202,7 @@ L'onglet **Statistiques** dit ce que coûte la recharge, mois par mois, pour un 
 - le coût de chaque mois, heures creuses et pleines empilées ;
 - le tableau des mois de l'année et son total.
 
-Les distances viennent des statistiques long terme de Home Assistant pour le **compteur kilométrique** du véhicule (réglage du véhicule ; le capteur doit avoir un `state_class`). Un mois que ces statistiques ne couvrent pas entièrement affiche « — » pour les chiffres aux 100 km.
+Les distances viennent des statistiques long terme de Home Assistant pour le **compteur kilométrique** du véhicule (réglage du véhicule ; le capteur doit avoir un `state_class`). Le premier mois de ces statistiques n'a que les km parcourus depuis leur début (marqués *).
 
 La comparaison essence utilise la **consommation essence de référence** du véhicule (L/100 km) et le **prix de l'essence** des options de EVChargeData : un capteur (par exemple une station de l'intégration Prix Carburant) ou un prix fixe. Les deux sont enregistrés dans chaque session : les changer ensuite ne réécrit pas les mois passés.
 
@@ -223,7 +223,7 @@ La coupure demande une **entité de branchement** et un **interrupteur de charge
 
 ### Reconstruire depuis l'historique
 
-L'action **EVChargeData : Reconstruire depuis l'historique** (`charge_board.rebuild_history`, `start` facultatif) rejoue l'historique de Home Assistant (tout ce que le recorder garde encore, 10 jours par défaut) dans le même moteur que l'enregistrement en direct. Elle ajoute les sessions qui n'ont pas été enregistrées (avant l'installation, ou pendant un arrêt de Home Assistant) et remplace une session enregistrée en partie quand la session reconstruite contient nettement plus d'énergie. Les sessions corrigées à la main ne sont jamais touchées, et la relancer ne change rien. Elle renvoie le nombre de sessions ajoutées et remplacées. Les sessions reconstruites sont attribuées au véhicule actuellement sélectionné sur le chargeur.
+L'action **EVChargeData : Reconstruire depuis l'historique** (`charge_board.rebuild_history`, `start` facultatif) rejoue l'historique de Home Assistant (tout ce que le recorder garde encore, 10 jours par défaut) dans le même moteur que l'enregistrement en direct. Elle ajoute les sessions qui n'ont pas été enregistrées (avant l'installation, ou pendant un arrêt de Home Assistant) et remplace une session enregistrée en partie quand la session reconstruite contient nettement plus d'énergie. Les sessions corrigées à la main ne sont jamais touchées, et la relancer ne change rien. Elle complète aussi les sessions enregistrées : le kilométrage lu dans l'historique, et le prix de l'essence et la consommation de référence actuels quand ils manquaient (il n'existe pas d'historique du prix de l'essence). Elle renvoie le nombre de sessions ajoutées, remplacées et complétées. Les sessions reconstruites sont attribuées au véhicule actuellement sélectionné sur le chargeur.
 
 ### Limites
 

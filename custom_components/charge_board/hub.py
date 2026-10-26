@@ -34,7 +34,7 @@ from .const import (
 from .model import Session
 from .notifications import plugged_text, started_text, summary_text
 from .panel import URL_PATH
-from .rebuild import merge_rebuilt
+from .rebuild import enrich, merge_rebuilt
 from .store import SessionStore
 from .target import should_cut
 from .tracker import Sample, SessionTracker, TrackerEvent, TrackerSettings
@@ -305,6 +305,8 @@ class Hub:
 
         removed: list[str] = []
         added: list[Session] = []
+        enriched = 0
+        fuel_l100 = {vid: v.get("fuel_l100") for vid, v in self.vehicles.items()}
         for cid, live in self.trackers.items():
             tracker = SessionTracker(cid, live.settings, _new_id)
             vehicle_id = self.vehicle_for(cid)
@@ -321,9 +323,12 @@ class Hub:
             gone, new = merge_rebuilt(recorded, rebuilt, busy)
             removed += gone
             added += new
-        if removed or added:
+            kept = [s for s in recorded if s.id not in gone and not s.edited]
+            enriched += len(enrich(kept, rebuilt, self.fuel_price(), fuel_l100))
+            enrich(new, rebuilt, self.fuel_price(), fuel_l100)
+        if removed or added or enriched:
             await self.store.async_replace(removed, added)
-        return {"added": len(added), "replaced": len(removed)}
+        return {"added": len(added), "replaced": len(removed), "completed": enriched}
 
     def _watched_entities(self) -> set[str]:
         keys = ("power_entity", "energy_entity", "plug_entity", "soc_entity", "odometer_entity")
@@ -339,18 +344,18 @@ class Hub:
 
     async def async_km_by_month(
         self, vehicle_id: str | None, months: list[str]
-    ) -> dict[str, float | None]:
-        """Distance driven per local month, from the odometer's long-term statistics.
+    ) -> tuple[dict[str, float | None], set[str]]:
+        """Distance driven per local month, from the odometer's long-term statistics, and the
+        months only partly covered (the first month of the statistics: km since they began).
 
-        A month is known only if the statistics already existed before it started (a row for
-        the previous month); the first month of the statistics is partial, so it is None.
         ponytail: a sensor whose statistics start exactly at a month's first hour still gets
-        that month as None.
+        that month marked partial.
         """
         result: dict[str, float | None] = dict.fromkeys(months)
+        partial: set[str] = set()
         entity = (self.vehicles.get(vehicle_id) or {}).get("odometer_entity")
         if not entity or not months or "recorder" not in self.hass.config.components:
-            return result
+            return result, partial
         tz = dt_util.get_default_time_zone()
         first = datetime.strptime(months[0], "%Y-%m").replace(tzinfo=tz)
         start = (first - timedelta(days=1)).replace(day=1)  # previous month
@@ -372,20 +377,20 @@ class Hub:
         }
         for month in months:
             prev = (datetime.strptime(month, "%Y-%m") - timedelta(days=1)).strftime("%Y-%m")
-            if month in rows and prev in rows:
+            if month in rows:
                 result[month] = rows[month]
-        return result
+                if prev not in rows:
+                    partial.add(month)
+        return result, partial
 
     async def async_km_between(
         self, vehicle_id: str | None, start: float, end: float
-    ) -> float | None:
-        """Distance driven between two times, from the odometer's hourly statistics.
-
-        None when the statistics start after `start` (the period is not fully covered).
-        """
+    ) -> tuple[float | None, float]:
+        """Distance driven between two times, from the odometer's hourly statistics, and the
+        time it really covers from: the first statistic when they began after `start`."""
         entity = (self.vehicles.get(vehicle_id) or {}).get("odometer_entity")
         if not entity or "recorder" not in self.hass.config.components:
-            return None
+            return None, start
         stats = await get_instance(self.hass).async_add_executor_job(
             statistics_during_period,
             self.hass,
@@ -397,9 +402,9 @@ class Hub:
             {"change"},
         )
         rows = stats.get(entity, [])
-        if not rows or rows[0]["start"] > start + 3600:
-            return None
-        return sum(r.get("change") or 0.0 for r in rows)
+        if not rows:
+            return None, start
+        return sum(r.get("change") or 0.0 for r in rows), max(start, rows[0]["start"])
 
     def last_session_of(self, vehicle_id: str | None) -> Session | None:
         """The vehicle's most recent finished session (sessions are kept newest first)."""

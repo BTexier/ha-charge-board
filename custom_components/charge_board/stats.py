@@ -56,15 +56,25 @@ def _row(month: str, sessions: list[Session], km: float | None) -> dict:
 
 
 def month_rows(
-    sessions: list[Session], months: list[str], km: dict[str, float | None], tz: tzinfo
+    sessions: list[Session],
+    months: list[str],
+    km: dict[str, float | None],
+    tz: tzinfo,
+    partial: set[str] | frozenset[str] = frozenset(),
 ) -> list[dict]:
-    """One row per "YYYY-MM" month; a session belongs to the local month of its start."""
+    """One row per "YYYY-MM" month; a session belongs to the local month of its start.
+
+    `partial` months have km only since the odometer has been tracked (marked km_partial).
+    """
     by_month: dict[str, list[Session]] = {m: [] for m in months}
     for s in sessions:
         month = local_month(_start(s), tz)
         if month in by_month:
             by_month[month].append(s)
-    return [_row(m, by_month[m], km.get(m)) for m in months]
+    rows = [_row(m, by_month[m], km.get(m)) for m in months]
+    for row in rows:
+        row["km_partial"] = row["month"] in partial
+    return rows
 
 
 def total_row(rows: list[dict], until: str | None = None) -> dict:

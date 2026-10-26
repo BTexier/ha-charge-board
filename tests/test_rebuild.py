@@ -42,3 +42,17 @@ def test_the_open_session_window_is_left_alone():
 def test_a_rounding_difference_does_not_replace_a_recorded_session():
     removed, added = merge_rebuilt([sess("a", 0, 10, 15.50)], [sess("r", 0, 10, 15.55)])
     assert removed == [] and added == []
+
+
+def test_enrich_fills_odometer_and_fuel_without_touching_the_rest():
+    from custom_components.charge_board.rebuild import enrich
+
+    recorded = sess("a", 0, 10, 9.8)
+    rebuilt = sess("r", 0, 10, 9.75)
+    rebuilt.odometer_start, rebuilt.odometer_end = 560.0, 577.0
+    changed = enrich([recorded], [rebuilt], fuel_price=2.089, fuel_l100={None: 5.7})
+    assert changed == [recorded]
+    assert (recorded.odometer_start, recorded.odometer_end) == (560.0, 577.0)
+    assert (recorded.fuel_price, recorded.fuel_l100) == (2.089, 5.7)
+    assert recorded.energy_kwh == 9.8
+    assert enrich([recorded], [rebuilt], fuel_price=1.5, fuel_l100={None: 6}) == []

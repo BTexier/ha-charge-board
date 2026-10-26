@@ -163,7 +163,9 @@ export class ChargeBoardVehicles extends LitElement {
             ${rows.map(
               (r) => html`<tr>
                 <td>${month(r.month!)}</td>
-                <td>${r.km == null ? `${DASH} *` : Math.round(r.km).toLocaleString(locale)}</td>
+                <td>
+                  ${r.km == null ? DASH : Math.round(r.km).toLocaleString(locale)}${r.km_partial ? " *" : ""}
+                </td>
                 <td>${formatEnergy(r.energy_kwh, locale)}</td>
                 <td>${r.kwh_100km == null ? DASH : r.kwh_100km.toLocaleString(locale, { maximumFractionDigits: 1 })}</td>
                 <td>${formatCost(r.cost_per_100km, c.currency, locale)}</td>

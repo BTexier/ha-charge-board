@@ -199,7 +199,7 @@ async def test_stats_command_returns_twelve_months(env, monkeypatch):
     hub, _cid, vid, ws = env
 
     async def km(vehicle_id, months):
-        return {"2026-10": 300.0}
+        return {"2026-10": 300.0}, {"2026-10"}
 
     monkeypatch.setattr(hub, "async_km_by_month", km)
     await put(hub, sess("a", ts(2026, 10, 10, 22), kwh=10, cost=1.4, vehicle_id=vid))
@@ -209,6 +209,7 @@ async def test_stats_command_returns_twelve_months(env, monkeypatch):
     october = res["rows"][9]
     assert october["month"] == "2026-10"
     assert october["km"] == 300.0
+    assert october["km_partial"] is True
     assert october["cost_per_100km"] == pytest.approx(1.4 / 300 * 100)
     assert res["total"]["sessions"] == 1
     assert res["currency"] == "EUR"
@@ -227,7 +228,7 @@ async def test_vehicle_command_shapes_config_and_flags_ignored_cut(env, monkeypa
     hub, _cid, vid, ws = env  # VEHICLE has no target entity: home objective; CHARGER has no switch
 
     async def km(vehicle_id, start, end):
-        return 100.0
+        return 100.0, start
 
     monkeypatch.setattr(hub, "async_km_between", km)
     now = dt_util.utcnow().timestamp()
@@ -257,7 +258,7 @@ async def test_vehicle_consumption_needs_5_km_and_flags_a_broken_entity(env, has
     hub, _cid, vid, ws = env
 
     async def km(vehicle_id, start, end):
-        return 3.0
+        return 3.0, start
 
     monkeypatch.setattr(hub, "async_km_between", km)
     hub.vehicles[vid]["target_entity"] = "input_number.target"
@@ -271,3 +272,23 @@ async def test_vehicle_consumption_needs_5_km_and_flags_a_broken_entity(env, has
     target = next(c for c in res["config"] if c["key"] == "target")
     assert target["ok"] is False
     assert target["value"] == 80  # the fixed fallback still shows
+
+
+async def test_vehicle_consumption_only_counts_energy_since_the_odometer_is_tracked(
+    env, monkeypatch
+):
+    hub, _cid, vid, ws = env
+    now = dt_util.utcnow().timestamp()
+
+    async def km(vehicle_id, start, end):
+        return 100.0, now - 5 * 86400  # odometer statistics began 5 days ago
+
+    monkeypatch.setattr(hub, "async_km_between", km)
+    await put(
+        hub,
+        sess("old", now - 10 * 86400, kwh=20, vehicle_id=vid),
+        sess("new", now - 2 * 86400, kwh=13, vehicle_id=vid),
+    )
+    await ws.send_json({"id": 1, "type": "charge_board/vehicle", "vehicle_id": vid})
+    res = (await ws.receive_json())["result"]
+    assert res["consumption_30d"] == pytest.approx(13.0)

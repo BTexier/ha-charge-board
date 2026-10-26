@@ -20,7 +20,7 @@ def auto_enable_custom_integrations(recorder_mock, enable_custom_integrations):
     yield
 
 
-async def test_km_by_month_marks_the_first_month_incomplete(hass):
+async def test_km_by_month_marks_the_first_month_partial(hass):
     await hass.config.async_set_time_zone("UTC")
     hass.states.async_set("sensor.p", "0", {"unit_of_measurement": "W"})
     entry = MockConfigEntry(
@@ -57,9 +57,16 @@ async def test_km_by_month_marks_the_first_month_incomplete(hass):
     )
     await async_wait_recording_done(hass)
     vid = next(iter(entry.runtime_data.vehicles))
-    km = await entry.runtime_data.async_km_by_month(vid, ["2026-10", "2026-11"])
-    assert km["2026-10"] is None
+    km, partial = await entry.runtime_data.async_km_by_month(vid, ["2026-10", "2026-11"])
+    assert km["2026-10"] == pytest.approx(18 * 24 + 23)  # since the first statistic (13 Oct)
+    assert partial == {"2026-10"}
     assert km["2026-11"] == pytest.approx(24 * 21)  # last imported hour: 21 Nov 23:00
+    # A period starting before the statistics: km since the first one, and from when.
+    since = datetime(2026, 10, 1, tzinfo=UTC).timestamp()
+    end = datetime(2026, 10, 20, tzinfo=UTC).timestamp()
+    km_7d, covered_from = await entry.runtime_data.async_km_between(vid, since, end)
+    assert covered_from == pytest.approx(start.timestamp())
+    assert km_7d == pytest.approx(7 * 24 - 1)
 
 
 async def test_rebuild_history_records_a_past_charge(hass, freezer):
@@ -106,7 +113,7 @@ async def test_rebuild_history_records_a_past_charge(hass, freezer):
         blocking=True,
         return_response=True,
     )
-    assert result == {"added": 1, "replaced": 0}
+    assert result == {"added": 1, "replaced": 0, "completed": 0}
     (s,) = entry.runtime_data.store.sessions
     assert s.energy_kwh == pytest.approx(2.2, abs=0.05)
     assert s.cost == pytest.approx(0.44, abs=0.01)
@@ -121,4 +128,4 @@ async def test_rebuild_history_records_a_past_charge(hass, freezer):
         blocking=True,
         return_response=True,
     )
-    assert again == {"added": 0, "replaced": 0}
+    assert again == {"added": 0, "replaced": 0, "completed": 0}

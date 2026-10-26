@@ -43,3 +43,33 @@ def merge_rebuilt(
             removed += [s.id for s in hits]
             added.append(r)
     return removed, added
+
+
+def enrich(
+    recorded: list[Session],
+    rebuilt: list[Session],
+    fuel_price: float | None,
+    fuel_l100: dict[str | None, float | None],
+) -> list[Session]:
+    """Fill what a recorded session lacks, in place; return the sessions changed.
+
+    The odometer comes from the rebuilt session it overlaps (read in the history); the petrol
+    price is today's and the reference consumption the vehicle's current one.
+    ponytail: no petrol price history exists, so past sessions get today's price.
+    """
+    changed = []
+    for s in recorded:
+        before = (s.odometer_start, s.odometer_end, s.fuel_price, s.fuel_l100)
+        if s.odometer_start is None:
+            twin = next(
+                (r for r in rebuilt if _overlap(r, s) and r.odometer_start is not None), None
+            )
+            if twin is not None:
+                s.odometer_start, s.odometer_end = twin.odometer_start, twin.odometer_end
+        if s.fuel_price is None:
+            s.fuel_price = fuel_price
+        if s.fuel_l100 is None:
+            s.fuel_l100 = fuel_l100.get(s.vehicle_id)
+        if (s.odometer_start, s.odometer_end, s.fuel_price, s.fuel_l100) != before:
+            changed.append(s)
+    return changed

@@ -158,7 +158,9 @@ export class ChargeBoardStats extends LitElement {
       <td>${kwh(r.energy_kwh)}</td>
       <td><b>${formatCost(r.cost, currency, locale)}</b></td>
       <td>${r.off_peak_share == null ? DASH : formatPercent(r.off_peak_share, locale)}</td>
-      <td>${r.km == null ? (r.sessions ? `${DASH} *` : DASH) : Math.round(r.km).toLocaleString(locale)}</td>
+      <td>
+        ${r.km == null ? DASH : Math.round(r.km).toLocaleString(locale)}${r.km_partial ? " *" : ""}
+      </td>
       <td>${r.cost_per_100km == null ? DASH : formatCost(r.cost_per_100km, currency, locale)}</td>
       <td class=${r.savings != null && r.savings > 0 ? "good" : ""}>
         ${r.savings == null ? DASH : formatCost(-r.savings, currency, locale)}

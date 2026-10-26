@@ -238,8 +238,8 @@ async def stats(hub: Hub, msg: dict) -> dict:
     vid = msg.get("vehicle_id")
     months = [f"{msg['year']}-{m:02d}" for m in range(1, 13)]
     found = [s for s in hub.store.sessions if vid is None or s.vehicle_id == vid]
-    km = await hub.async_km_by_month(vid, months) if vid else {}
-    rows = month_rows(found, months, km, dt_util.get_default_time_zone())
+    km, partial = await hub.async_km_by_month(vid, months) if vid else ({}, set())
+    rows = month_rows(found, months, km, dt_util.get_default_time_zone(), partial)
     now = _local_month(dt_util.utcnow().timestamp())
     return {"currency": hub.hass.config.currency, "rows": rows, "total": total_row(rows, now)}
 
@@ -268,8 +268,9 @@ async def vehicle(hub: Hub, msg: dict) -> dict:
     mine = [s for s in hub.store.sessions if s.vehicle_id == vid]
 
     start = now - 30 * 86400
-    km_30d = await hub.async_km_between(vid, start, now)
-    energy_30d = sum(s.energy_kwh for s in mine if _start(s) >= start)
+    km_30d, covered_from = await hub.async_km_between(vid, start, now)
+    # Only the energy charged since the odometer is tracked goes with these km.
+    energy_30d = sum(s.energy_kwh for s in mine if _start(s) >= covered_from)
     enough = km_30d is not None and km_30d >= MIN_KM_FOR_CONSUMPTION
     consumption = energy_30d / km_30d * 100 if enough else None
     autonomy = (
@@ -278,7 +279,8 @@ async def vehicle(hub: Hub, msg: dict) -> dict:
         else None
     )
     months = _last_months(now)
-    rows = month_rows(mine, months, await hub.async_km_by_month(vid, months), _tz())
+    km, partial = await hub.async_km_by_month(vid, months)
+    rows = month_rows(mine, months, km, _tz(), partial)
     for row in rows:
         km = row["km"]
         row["kwh_100km"] = (

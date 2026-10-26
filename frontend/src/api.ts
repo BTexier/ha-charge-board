@@ -122,7 +122,8 @@ export interface StatsRow {
   off_peak_share: number | null;
   off_peak_cost: number;
   peak_cost: number;
-  km: number | null; // null: odometer statistics do not cover the month
+  km: number | null; // null: no odometer statistics for the month
+  km_partial?: boolean; // km only since the odometer has been tracked (first month)
   fuel_price: number | null;
   fuel_l100: number | null;
   cost_per_100km: number | null;
