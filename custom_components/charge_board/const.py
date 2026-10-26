@@ -21,3 +21,5 @@ SUBENTRY_VEHICLE = "vehicle"
 SIGNAL_UPDATED = f"{DOMAIN}_updated"
 # Live data of one charger changed (after every sample); format with the charger id.
 SIGNAL_LIVE = f"{DOMAIN}_live_{{}}"
+NOTIFICATIONS = ["plugged", "started", "unplugged"]
+EVENT_PREFIX = f"{DOMAIN}_"

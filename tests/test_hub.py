@@ -4,6 +4,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_mock_service,
     mock_restore_cache,
 )
 
@@ -149,3 +150,101 @@ async def test_switching_vehicle_forgets_previous_soc(hass, setup, freezer):
     session = hub.live(cid)["session"]
     assert session["vehicle_id"] == no_soc
     assert session["soc_start"] is None
+
+
+# --- Notifications --------------------------------------------------------------------------
+
+EVENTS = ("charge_board_plugged", "charge_board_started", "charge_board_unplugged")
+
+
+async def _notify_entry(hass, **options):
+    hass.states.async_set("sensor.p", "2200", {"unit_of_measurement": "W"})
+    hass.states.async_set("binary_sensor.plug", "off")
+    hass.states.async_set("sensor.soc", "40")
+    entry = MockConfigEntry(
+        domain="charge_board",
+        options={"off_peak_price": 0.2, "peak_price": 0.2, **options},
+        subentries_data=[
+            {"data": CHARGER, "subentry_type": "charger", "title": "Dé", "unique_id": None},
+            {"data": VEHICLE, "subentry_type": "vehicle", "title": "Twingo", "unique_id": None},
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def _capture(hass):
+    captured = []
+    for name in EVENTS:
+        hass.bus.async_listen(name, captured.append)
+    return captured
+
+
+async def _full_cycle(hass, freezer):
+    hass.states.async_set("binary_sensor.plug", "on")
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 900)  # 15 min of charging
+    hass.states.async_set("sensor.p", "0", {"unit_of_measurement": "W"})
+    freezer.tick(5)
+    hass.states.async_set("binary_sensor.plug", "off")
+    await hass.async_block_till_done()
+
+
+async def test_plug_start_unplug_notify_once_each(hass, freezer):
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
+    entry = await _notify_entry(hass, notify_service="mobile_app_iphone")
+    ev = await _capture(hass)
+    await _full_cycle(hass, freezer)
+    assert [c.data["title"] for c in calls] == [
+        "Twingo plugged in",
+        "Charging started",
+        "Twingo unplugged",
+    ]
+    assert calls[0].data["message"] == "On Dé · battery 40% → target 100%"
+    assert calls[0].data["data"]["url"] == "/charge-board"
+    assert [e.event_type for e in ev] == list(EVENTS)
+    assert ev[0].data["vehicle_name"] == "Twingo"
+    assert ev[2].data["session"]["energy_kwh"] > 0
+    assert len(entry.runtime_data.store.sessions) == 1
+
+
+async def test_reload_mid_session_sends_nothing_new(hass, freezer):
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
+    entry = await _notify_entry(hass, notify_service="mobile_app_iphone")
+    hass.states.async_set("binary_sensor.plug", "on")
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 600)
+    sent = len(calls)
+    assert sent == 2
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    await _run(hass, freezer, 300)
+    assert len(calls) == sent
+
+
+async def test_disabled_notification_still_fires_event(hass, freezer):
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
+    await _notify_entry(hass, notify_service="mobile_app_iphone", notifications=["unplugged"])
+    ev = await _capture(hass)
+    await _full_cycle(hass, freezer)
+    assert [c.data["title"] for c in calls] == ["Twingo unplugged"]
+    assert [e.event_type for e in ev] == list(EVENTS)
+
+
+async def test_missing_notify_service_does_not_lose_the_session(hass, freezer):
+    entry = await _notify_entry(hass, notify_service="mobile_app_gone")
+    ev = await _capture(hass)
+    await _full_cycle(hass, freezer)
+    assert len(entry.runtime_data.store.sessions) == 1
+    assert ev[-1].event_type == "charge_board_unplugged"
+
+
+async def test_no_phone_sends_nothing_but_fires_events(hass, freezer):
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
+    await _notify_entry(hass)
+    ev = await _capture(hass)
+    await _full_cycle(hass, freezer)
+    assert calls == []
+    assert len(ev) == 3

@@ -19,6 +19,7 @@ from .const import (
     DEFAULT_POWER_THRESHOLD_W,
     DEFAULT_TARGET,
     DOMAIN,
+    NOTIFICATIONS,
     OVERVIEW_STYLES,
     SUBENTRY_CHARGER,
     SUBENTRY_VEHICLE,
@@ -95,8 +96,25 @@ class ChargeBoardConfigFlow(ConfigFlow, domain=DOMAIN):
         return {SUBENTRY_CHARGER: ChargerSubentryFlow, SUBENTRY_VEHICLE: VehicleSubentryFlow}
 
 
+def _options_schema(phones: list[str]) -> vol.Schema:
+    """Tariff and overview style, then the phone to notify (a mobile_app notify service)."""
+    return OPTIONS_SCHEMA.extend(
+        {
+            vol.Optional("notify_service"): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=phones)
+            ),
+            # Absent means all of them (keeps options saved before notifications unchanged).
+            vol.Optional("notifications"): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=NOTIFICATIONS, multiple=True, translation_key="notifications"
+                )
+            ),
+        }
+    )
+
+
 class TariffOptionsFlow(OptionsFlow):
-    """Tariff and overview style; the update listener reloads the entry."""
+    """Tariff, overview style and notifications; the update listener reloads the entry."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors = {}
@@ -105,9 +123,13 @@ class TariffOptionsFlow(OptionsFlow):
                 errors["off_peak_windows"] = "invalid_windows"
             else:
                 return self.async_create_entry(data=user_input)
-        schema = self.add_suggested_values_to_schema(
-            OPTIONS_SCHEMA, user_input or self.config_entry.options
+        phones = sorted(
+            name
+            for name in self.hass.services.async_services_for_domain("notify")
+            if name.startswith("mobile_app_")
         )
+        current = {"notifications": NOTIFICATIONS, **self.config_entry.options}
+        schema = self.add_suggested_values_to_schema(_options_schema(phones), user_input or current)
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
 
 

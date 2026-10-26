@@ -1,6 +1,6 @@
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
 
 
 async def _subentry(hass, entry, kind, user_input):
@@ -109,3 +109,20 @@ async def test_reconfigure_charger_keeps_its_id(hass):
     assert list(entry.subentries) == [sid]
     assert entry.subentries[sid].data["power_threshold_w"] == 300
     assert entry.subentries[sid].title == "Dé 2"
+
+
+async def test_options_flow_lists_phones_and_stores_notifications(hass):
+    async_mock_service(hass, "notify", "mobile_app_iphone")
+    async_mock_service(hass, "notify", "persistent_notification")
+    entry = MockConfigEntry(domain="charge_board")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    phones = result["data_schema"].schema["notify_service"].config["options"]
+    assert phones == ["mobile_app_iphone"]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"notify_service": "mobile_app_iphone", "notifications": ["unplugged"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["notify_service"] == "mobile_app_iphone"
+    assert entry.options["notifications"] == ["unplugged"]

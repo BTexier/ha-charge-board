@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, time, timedelta
 from uuid import uuid4
 
@@ -19,13 +20,19 @@ from .const import (
     DEFAULT_GAP_HOURS,
     DEFAULT_POWER_THRESHOLD_W,
     DOMAIN,
+    EVENT_PREFIX,
+    NOTIFICATIONS,
     SIGNAL_LIVE,
     SUBENTRY_CHARGER,
     SUBENTRY_VEHICLE,
     TICK_SECONDS,
 )
+from .notifications import plugged_text, started_text, summary_text
+from .panel import URL_PATH
 from .store import SessionStore
-from .tracker import Sample, SessionTracker, TrackerSettings
+from .tracker import Sample, SessionTracker, TrackerEvent, TrackerSettings
+
+LOGGER = logging.getLogger(__name__)
 
 POWER_UNITS = {"W": 1.0, "kW": 1000.0}
 ENERGY_UNITS = {"Wh": 0.001, "kWh": 1.0}
@@ -135,13 +142,72 @@ class Hub:
 
     @callback
     def _feed_all(self) -> None:
+        announced = False
         for cid, tracker in self.trackers.items():
             finished = tracker.feed(self.sample_for(cid), self.vehicle_for(cid))
             if finished is not None:
                 self.entry.async_create_task(self.hass, self.store.async_add(finished))
             self.store.trackers_state[cid] = tracker.to_dict()
+            for event in tracker.pop_events():
+                announced = True
+                self._announce(cid, event)
             async_dispatcher_send(self.hass, SIGNAL_LIVE.format(cid))
-        self.store.async_save_trackers()
+        if announced:
+            # Written now, not within the save delay: a crash must not announce it twice.
+            self.entry.async_create_task(self.hass, self.store.async_flush_trackers())
+        else:
+            self.store.async_save_trackers()
+
+    @callback
+    def _announce(self, charger_id: str, event: TrackerEvent) -> None:
+        """Fire charge_board_<kind> and, if enabled, notify the chosen phone."""
+        charger = self.chargers[charger_id]["name"]
+        vehicle_id = self.vehicle_for(charger_id)
+        vehicle = self.vehicles.get(vehicle_id) or {}
+        name = vehicle.get("name")
+        soc = self._number(vehicle.get("soc_entity"))
+        data = {
+            "charger_id": charger_id,
+            "charger_name": charger,
+            "vehicle_id": vehicle_id if vehicle else None,
+            "vehicle_name": name,
+        }
+        lang = "fr" if (self.hass.config.language or "").startswith("fr") else "en"
+        if event.kind == "plugged":
+            target = self.target_for(vehicle_id)
+            data |= {"soc": soc, "target": target}
+            text = plugged_text(lang, charger, name, soc, target)
+        elif event.kind == "started":
+            sess = self.trackers[charger_id].current
+            data |= {"charge_start": sess.charge_start if sess else None, "soc": soc}
+            text = started_text(lang, charger, name, soc)
+        else:
+            data["session"] = event.session.to_dict()
+            text = summary_text(lang, charger, name, event.session, self.hass.config.currency)
+        self.hass.bus.async_fire(f"{EVENT_PREFIX}{event.kind}", data)
+        service = self.options.get("notify_service")
+        if service and event.kind in self.options.get("notifications", NOTIFICATIONS):
+            self.entry.async_create_background_task(
+                self.hass, self._async_notify(service, *text), f"{DOMAIN} notify"
+            )
+
+    async def _async_notify(self, service: str, title: str, message: str) -> None:
+        url = f"/{URL_PATH}"
+        try:
+            await self.hass.services.async_call(
+                "notify",
+                service,
+                {"title": title, "message": message, "data": {"url": url, "clickAction": url}},
+                blocking=True,
+            )
+        except Exception as err:  # noqa: BLE001 - a notification must never break recording
+            LOGGER.warning("Charge Board could not notify %s: %s", service, err)
+
+    def target_for(self, vehicle_id: str | None) -> float | None:
+        """Target level: the target entity when it reads a number, else the fixed target."""
+        v = self.vehicles.get(vehicle_id) or {}
+        target = self._number(v.get("target_entity"))
+        return v.get("target_fixed") if target is None else target
 
     def vehicle_for(self, charger_id: str) -> str | None:
         return self.selected.get(charger_id)

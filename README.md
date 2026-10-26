@@ -59,6 +59,18 @@ Only finished sessions can be corrected. There is no undo.
 - **Merge** with the previous or next session of the same charger: energy, cost, durations and curves add up; times and levels come from the ends.
 - **Split** at a time picked on the power chart: energy and cost are shared according to the curve and the tariff slices on each side.
 
+### Notifications
+
+In the integration options, pick the **phone to notify** (any `notify.mobile_app_*` service) and which **notifications** to send:
+
+- **Plugged in**: vehicle, charger, battery level and target when known.
+- **Charging started**: once per session, after 5 minutes of continuous charging (a few seconds at plug-in do not count).
+- **Unplugged**: the session summary (energy, cost, off-peak share, battery, charging and plugged-in time).
+
+Tapping a notification opens the Recharge panel. The texts follow Home Assistant's language (French, otherwise English).
+
+The same moments are fired as events whatever the notification settings, for your own automations: `charge_board_plugged` (`soc`, `target`), `charge_board_started` (`charge_start`, `soc`) and `charge_board_unplugged` (`session`, the full recorded session). All carry `charger_id`, `charger_name`, `vehicle_id` and `vehicle_name`.
+
 ### Limits
 
 - Finished sessions are stored in a single JSON file.
@@ -138,6 +150,18 @@ Seules les sessions terminées se corrigent. Pas d'annulation.
 - **Supprimer** (avec confirmation).
 - **Fusionner** avec la session précédente ou suivante du même chargeur : énergies, coûts, durées et courbes s'additionnent ; heures et niveaux pris aux bornes.
 - **Couper** à un instant choisi sur le graphique de puissance : énergie et coût répartis selon la courbe et les tranches tarifaires de chaque côté.
+
+### Notifications
+
+Dans les options de l'intégration, choisir le **téléphone à notifier** (un service `notify.mobile_app_*`) et les **notifications actives** :
+
+- **Branchement** : véhicule, chargeur, niveau de batterie et niveau visé s'ils sont connus.
+- **Démarrage de la charge** : une fois par session, après 5 minutes de charge continue (quelques secondes au branchement ne comptent pas).
+- **Débranchement** : le résumé de la session (énergie, coût, part en heures creuses, batterie, durées de charge et de branchement).
+
+Toucher une notification ouvre le panneau Recharge. Les textes suivent la langue de Home Assistant (français, sinon anglais).
+
+Les mêmes moments sont émis en événements, quels que soient les réglages de notification, pour vos propres automatisations : `charge_board_plugged` (`soc`, `target`), `charge_board_started` (`charge_start`, `soc`) et `charge_board_unplugged` (`session`, la session enregistrée complète). Tous portent `charger_id`, `charger_name`, `vehicle_id` et `vehicle_name`.
 
 ### Limites
 

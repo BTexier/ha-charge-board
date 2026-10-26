@@ -97,9 +97,7 @@ async def overview(hub: Hub, msg: dict) -> dict:
         vehicle = end = None
         if v:
             soc = hub._number(v.get("soc_entity"))
-            target = hub._number(v.get("target_entity")) if v.get("target_entity") else None
-            if target is None:
-                target = v.get("target_fixed")
+            target = hub.target_for(live["vehicle_id"])
             vehicle = {
                 "id": live["vehicle_id"],
                 "name": v["name"],

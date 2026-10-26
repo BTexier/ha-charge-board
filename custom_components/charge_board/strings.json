@@ -21,11 +21,14 @@
           "peak_price": "Peak price (per kWh)",
           "off_peak_entity": "Off-peak now (binary sensor)",
           "off_peak_windows": "Off-peak windows",
-          "overview_style": "Overview style"
+          "overview_style": "Overview style",
+          "notify_service": "Phone to notify",
+          "notifications": "Notifications"
         },
         "data_description": {
           "price_entity": "Takes precedence over the fixed prices.",
-          "off_peak_windows": "For example 22:00-06:00, several separated by commas. Ignored when an off-peak binary sensor is set."
+          "off_peak_windows": "For example 22:00-06:00, several separated by commas. Ignored when an off-peak binary sensor is set.",
+          "notify_service": "The Home Assistant app on this phone receives plug-in, start and unplug (with the session summary) notifications. Empty: no notification; the charge_board_* events are fired anyway."
         }
       }
     },
@@ -134,6 +137,13 @@
       "options": {
         "detailed": "Detailed",
         "compact": "Compact"
+      }
+    },
+    "notifications": {
+      "options": {
+        "plugged": "Plugged in",
+        "started": "Charging started",
+        "unplugged": "Unplugged (summary)"
       }
     }
   },

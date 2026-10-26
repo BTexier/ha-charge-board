@@ -21,11 +21,14 @@
           "peak_price": "Prix heures pleines (par kWh)",
           "off_peak_entity": "Heures creuses maintenant (capteur binaire)",
           "off_peak_windows": "Plages heures creuses",
-          "overview_style": "Style de l'aperçu"
+          "overview_style": "Style de l'aperçu",
+          "notify_service": "Téléphone à notifier",
+          "notifications": "Notifications actives"
         },
         "data_description": {
           "price_entity": "Prioritaire sur les prix fixes.",
-          "off_peak_windows": "Par exemple 22:00-06:00, plusieurs séparées par des virgules. Ignorées si un capteur binaire heures creuses est choisi."
+          "off_peak_windows": "Par exemple 22:00-06:00, plusieurs séparées par des virgules. Ignorées si un capteur binaire heures creuses est choisi.",
+          "notify_service": "L'application Home Assistant de ce téléphone reçoit le branchement, le démarrage et le débranchement (avec le résumé de la session). Vide : aucune notification ; les événements charge_board_* sont émis quand même."
         }
       }
     },
@@ -134,6 +137,13 @@
       "options": {
         "detailed": "Détaillé",
         "compact": "Compact"
+      }
+    },
+    "notifications": {
+      "options": {
+        "plugged": "Branchement",
+        "started": "Démarrage de la charge",
+        "unplugged": "Débranchement (résumé)"
       }
     }
   },
