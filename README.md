@@ -71,6 +71,33 @@ Tapping a notification opens the Recharge panel. The texts follow Home Assistant
 
 The same moments are fired as events whatever the notification settings, for your own automations: `charge_board_plugged` (`soc`, `target`), `charge_board_started` (`charge_start`, `soc`) and `charge_board_unplugged` (`session`, the full recorded session). All carry `charger_id`, `charger_name`, `vehicle_id` and `vehicle_name`.
 
+### Statistics
+
+The **Statistics** tab answers what charging costs, month by month, for one vehicle (or all):
+
+- the current month: cost and change vs the previous month, energy and sessions, off-peak share, cost per 100 km, savings vs a petrol car;
+- the cost of each month, off-peak and peak stacked;
+- a table of the year's months and its total.
+
+Distances come from Home Assistant's long-term statistics of the vehicle's **odometer** (vehicle setting; the sensor needs a `state_class`). A month the statistics do not fully cover shows "—" for the per-100-km figures.
+
+The petrol comparison uses the vehicle's **reference petrol consumption** (L/100 km) and the **petrol price** of the Charge Board options: a sensor (for example a station of the Prix Carburant integration) or a fixed price. Both are recorded in each session, so changing them later does not rewrite past months.
+
+### Vehicles
+
+The **Vehicles** tab shows one card per vehicle: battery and target, consumption over 30 days (energy charged ÷ km), odometer, estimated range, the battery over 30 days with the charges, consumption per month, and the state of each configured sensor ("Edit" opens the vehicle settings).
+
+Each vehicle also gets a sensor **Consumption since charge** (`sensor.<vehicle>_consommation_recharge`, kWh/100 km): the battery used since the last unplug divided by the distance driven, from 5 km on.
+
+### Home target
+
+The **target source** of a vehicle is either:
+
+- **the vehicle**: the target entity is the car's own setting; the car stops by itself, Charge Board only shows it;
+- **home**: a helper (`input_number`) or the fixed target. When the plugged-in vehicle reaches it, Charge Board turns the charger's **charging switch** off and fires `charge_board_target_reached` (`charger_id`, `vehicle_id`, `soc`, `target`). It turns the switch back on at unplug. A switch turned back on by hand stays on until the unplug.
+
+The cut needs both a **plug entity** and a **charging switch** on the charger; without them the Vehicles card says the home target has no effect.
+
 ### Limits
 
 - Finished sessions are stored in a single JSON file.
@@ -162,6 +189,33 @@ Dans les options de l'intégration, choisir le **téléphone à notifier** (un s
 Toucher une notification ouvre le panneau Recharge. Les textes suivent la langue de Home Assistant (français, sinon anglais).
 
 Les mêmes moments sont émis en événements, quels que soient les réglages de notification, pour vos propres automatisations : `charge_board_plugged` (`soc`, `target`), `charge_board_started` (`charge_start`, `soc`) et `charge_board_unplugged` (`session`, la session enregistrée complète). Tous portent `charger_id`, `charger_name`, `vehicle_id` et `vehicle_name`.
+
+### Statistiques
+
+L'onglet **Statistiques** dit ce que coûte la recharge, mois par mois, pour un véhicule (ou tous) :
+
+- le mois en cours : coût et écart avec le mois précédent, énergie et sessions, part en heures creuses, coût aux 100 km, économie par rapport à une voiture essence ;
+- le coût de chaque mois, heures creuses et pleines empilées ;
+- le tableau des mois de l'année et son total.
+
+Les distances viennent des statistiques long terme de Home Assistant pour le **compteur kilométrique** du véhicule (réglage du véhicule ; le capteur doit avoir un `state_class`). Un mois que ces statistiques ne couvrent pas entièrement affiche « — » pour les chiffres aux 100 km.
+
+La comparaison essence utilise la **consommation essence de référence** du véhicule (L/100 km) et le **prix de l'essence** des options de Charge Board : un capteur (par exemple une station de l'intégration Prix Carburant) ou un prix fixe. Les deux sont enregistrés dans chaque session : les changer ensuite ne réécrit pas les mois passés.
+
+### Véhicules
+
+L'onglet **Véhicules** montre une fiche par véhicule : batterie et objectif, consommation sur 30 jours (énergie rechargée ÷ km), compteur, autonomie estimée, la batterie sur 30 jours avec les recharges, la consommation par mois et l'état de chaque capteur configuré (« Modifier » ouvre les réglages du véhicule).
+
+Chaque véhicule a aussi un capteur **Consommation depuis la recharge** (`sensor.<véhicule>_consommation_recharge`, kWh/100 km) : batterie consommée depuis le dernier débranchement divisée par la distance parcourue, à partir de 5 km.
+
+### Objectif maison
+
+La **source de l'objectif** d'un véhicule est :
+
+- **le véhicule** : l'entité d'objectif est le réglage de la voiture ; elle s'arrête seule, Charge Board se contente de l'afficher ;
+- **la maison** : une aide (`input_number`) ou l'objectif fixe. Quand le véhicule branché l'atteint, Charge Board coupe l'**interrupteur de charge** du chargeur et émet `charge_board_target_reached` (`charger_id`, `vehicle_id`, `soc`, `target`). Il le rallume au débranchement. Un interrupteur rallumé à la main reste allumé jusqu'au débranchement.
+
+La coupure demande une **entité de branchement** et un **interrupteur de charge** sur le chargeur ; sans eux, la fiche Véhicules signale que l'objectif maison est sans effet.
 
 ### Limites
 
